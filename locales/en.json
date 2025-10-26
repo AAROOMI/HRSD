@@ -1,0 +1,81 @@
+{
+  "header": {
+    "title": "HRSD Automated Policy Generator",
+    "subtitle": "Powered by Agentic AI"
+  },
+  "dashboard": {
+    "title": "Document Control Center",
+    "noDocuments": "No documents available.",
+    "noDocumentsAction": "Please wait while initial documents are generated.",
+    "idLabel": "ID",
+    "versionLabel": "v"
+  },
+  "agentStatus": {
+    "title": "Agent AI Status",
+    "monitoring": "Monitoring {{count}} document(s). All systems nominal.",
+    "generating": "Generating {{count}} policies from the framework. Please wait..."
+  },
+  "documentViewer": {
+    "backToDashboard": "< Back to Dashboard",
+    "description": "Description",
+    "purpose": "Purpose",
+    "scope": "Scope",
+    "procedure": "Procedure",
+    "guidelines": "Guidelines",
+    "articles": "Articles & Clauses",
+    "status": "Status",
+    "lifecycleActions": "Lifecycle Actions",
+    "export": "Export",
+    "exportPdf": "Export PDF",
+    "exportWord": "Export Word",
+    "exportComingSoon": "Export functionality coming soon.",
+    "trackingCodes": "Tracking Codes",
+    "auditTrail": "Audit Trail",
+    "notesPromptTitle": "Enter notes for changing status to \"{{status}}\":",
+    "notesPromptDefault": "Status changed by user."
+  },
+  "actions": {
+    "requestApproval": "Request Approval",
+    "approve": "Approve",
+    "requestRevisions": "Request Revisions",
+    "publish": "Publish",
+    "archive": "Archive"
+  },
+  "loading": {
+    "generating": "Agent AI is generating document...",
+    "wait": "This may take a moment."
+  },
+  "journey": {
+    "title": "Guided Compliance Journey",
+    "description": "Let our Agentic AI analyze your documents against the HRSD framework and generate a step-by-step compliance plan.",
+    "start": "Start Journey",
+    "backToDashboard": "< Exit Journey",
+    "welcome": {
+      "title": "Welcome to the Guided Compliance Journey",
+      "description": "This AI-powered agent will guide you through analyzing a policy, identifying compliance gaps against the HRSD framework, and creating an actionable plan to resolve them. The process involves selecting a policy, letting the AI perform its analysis, and then reviewing the generated compliance plan.",
+      "begin": "Begin Analysis"
+    },
+    "select": {
+      "title": "Step 1: Select a Policy to Analyze",
+      "description": "Choose one of the generated policies below. The AI will compare its content against the official regulatory framework to check for compliance."
+    },
+    "analyzing": {
+      "title": "Agent AI is Analyzing...",
+      "description": "Please wait while the agent compares the document for '{{policyTitle}}' with the HRSD framework to identify compliance gaps."
+    },
+    "plan": {
+      "title": "Step 2: Review Compliance Plan",
+      "description": "The AI has analyzed the policy and generated the following action plan. Follow these steps to ensure your document is fully compliant.",
+      "forPolicy": "Compliance Plan for: {{policyTitle}}"
+    },
+    "error": {
+      "title": "Analysis Failed",
+      "description": "The AI agent was unable to generate a compliance plan. This could be due to a network issue or a problem with the service. Please try again later.",
+      "tryAgain": "Try Another Policy"
+    },
+    "steps": {
+      "select": "Select Policy",
+      "review": "Review Plan"
+    }
+  }
+}

@@ -1,0 +1,5 @@
+{
+  "name": "HRSD Automated Policy Generator",
+  "description": "An AI-powered application that automates the generation of Human Resources and Social Development (HRSD) policy documents from a regulatory framework. It uses an agentic AI model to process text, generate structured documents with QR/Bar codes, manage a simulated approval lifecycle, and allows exporting to PDF and Word formats.",
+  "requestFramePermissions": []
+}
