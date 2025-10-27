@@ -70,17 +70,17 @@ const RiskAssessment: React.FC = () => {
 
             {/* Filters */}
             <div className="flex flex-wrap gap-4 mb-6 flex-shrink-0">
-                <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="filter-select">
-                    <option value="All">{t('riskAssessment.filters.all')} {t('riskAssessment.table.category')}</option>
-                    {categories.slice(1).map(c => <option key={c} value={c}>{c}</option>)}
+                <select value={categoryFilter} onChange={e => setCategoryFilter(e.target.value)} className="bg-gray-800 border border-gray-600 rounded-md px-3 py-1.5 text-white focus:ring-sky-500 focus:border-sky-500">
+                    <option className="bg-gray-900 text-white" value="All">{t('riskAssessment.filters.all')} {t('riskAssessment.table.category')}</option>
+                    {categories.slice(1).map(c => <option className="bg-gray-900 text-white" key={c} value={c}>{c}</option>)}
                 </select>
-                <select value={riskLevelFilter} onChange={e => setRiskLevelFilter(e.target.value)} className="filter-select">
-                    <option value="All">{t('riskAssessment.filters.all')} {t('riskAssessment.table.riskLevel')}</option>
-                    {riskLevels.map(l => <option key={l} value={l}>{t(`riskAssessment.levels.${l.toLowerCase()}`)}</option>)}
+                <select value={riskLevelFilter} onChange={e => setRiskLevelFilter(e.target.value)} className="bg-gray-800 border border-gray-600 rounded-md px-3 py-1.5 text-white focus:ring-sky-500 focus:border-sky-500">
+                    <option className="bg-gray-900 text-white" value="All">{t('riskAssessment.filters.all')} {t('riskAssessment.table.riskLevel')}</option>
+                    {riskLevels.map(l => <option className="bg-gray-900 text-white" key={l} value={l}>{t(`riskAssessment.levels.${l.toLowerCase()}`)}</option>)}
                 </select>
-                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="filter-select">
-                    <option value="All">{t('riskAssessment.filters.all')} {t('riskAssessment.table.status')}</option>
-                     {complianceStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                <select value={statusFilter} onChange={e => setStatusFilter(e.target.value)} className="bg-gray-800 border border-gray-600 rounded-md px-3 py-1.5 text-white focus:ring-sky-500 focus:border-sky-500">
+                    <option className="bg-gray-900 text-white" value="All">{t('riskAssessment.filters.all')} {t('riskAssessment.table.status')}</option>
+                     {complianceStatuses.map(s => <option className="bg-gray-900 text-white" key={s} value={s}>{s}</option>)}
                 </select>
             </div>
 
@@ -101,7 +101,7 @@ const RiskAssessment: React.FC = () => {
                             <th className="p-3 font-semibold w-1/6">{t('riskAssessment.table.actions')}</th>
                         </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/10">
+                    <tbody className="divide-y divide-white/10 text-gray-200">
                         {filteredRisks.map(risk => {
                             const { level, className } = calculateRiskLevel(risk.likelihood, risk.impact);
                             return (
@@ -111,13 +111,13 @@ const RiskAssessment: React.FC = () => {
                                     <td className="p-3 align-top">{risk.riskDescription}</td>
                                     <td className="p-3 align-top text-gray-400">{risk.frameworkReference}</td>
                                     <td className="p-3 align-top">
-                                        <select value={risk.likelihood} onChange={e => handleRiskChange(risk.id, 'likelihood', e.target.value)} className="interactive-select">
-                                            {['Low', 'Medium', 'High'].map(l => <option key={l} value={l}>{t(`riskAssessment.levels.${l.toLowerCase()}`)}</option>)}
+                                        <select value={risk.likelihood} onChange={e => handleRiskChange(risk.id, 'likelihood', e.target.value)} className="w-full bg-gray-800/50 border border-gray-600/50 rounded-md p-1 text-white focus:ring-sky-500 focus:border-sky-500">
+                                            {['Low', 'Medium', 'High'].map(l => <option className="bg-gray-900 text-white" key={l} value={l}>{t(`riskAssessment.levels.${l.toLowerCase()}`)}</option>)}
                                         </select>
                                     </td>
                                     <td className="p-3 align-top">
-                                        <select value={risk.impact} onChange={e => handleRiskChange(risk.id, 'impact', e.target.value)} className="interactive-select">
-                                            {['Low', 'Medium', 'High'].map(l => <option key={l} value={l}>{t(`riskAssessment.levels.${l.toLowerCase()}`)}</option>)}
+                                        <select value={risk.impact} onChange={e => handleRiskChange(risk.id, 'impact', e.target.value)} className="w-full bg-gray-800/50 border border-gray-600/50 rounded-md p-1 text-white focus:ring-sky-500 focus:border-sky-500">
+                                            {['Low', 'Medium', 'High'].map(l => <option className="bg-gray-900 text-white" key={l} value={l}>{t(`riskAssessment.levels.${l.toLowerCase()}`)}</option>)}
                                         </select>
                                     </td>
                                     <td className="p-3 align-top text-center">
@@ -126,15 +126,15 @@ const RiskAssessment: React.FC = () => {
                                         </span>
                                     </td>
                                     <td className="p-3 align-top">
-                                        <textarea value={risk.mitigationControls} onChange={e => handleRiskChange(risk.id, 'mitigationControls', e.target.value)} className="interactive-textarea" />
+                                        <textarea value={risk.mitigationControls} onChange={e => handleRiskChange(risk.id, 'mitigationControls', e.target.value)} className="w-full bg-gray-800/50 border border-gray-600/50 rounded-md p-1 text-white focus:ring-sky-500 focus:border-sky-500 resize-none h-24" />
                                     </td>
                                     <td className="p-3 align-top">
-                                        <select value={risk.complianceStatus} onChange={e => handleRiskChange(risk.id, 'complianceStatus', e.target.value)} className={`interactive-select w-full ${getComplianceStatusClass(risk.complianceStatus)}`}>
-                                            {complianceStatuses.map(s => <option key={s} value={s}>{s}</option>)}
+                                        <select value={risk.complianceStatus} onChange={e => handleRiskChange(risk.id, 'complianceStatus', e.target.value)} className={`w-full p-1 rounded-md border border-transparent focus:ring-sky-500 focus:border-sky-500 ${getComplianceStatusClass(risk.complianceStatus)}`}>
+                                            {complianceStatuses.map(s => <option className="bg-gray-900 text-white" key={s} value={s}>{s}</option>)}
                                         </select>
                                     </td>
                                     <td className="p-3 align-top">
-                                        <textarea value={risk.actionItems} onChange={e => handleRiskChange(risk.id, 'actionItems', e.target.value)} className="interactive-textarea" />
+                                        <textarea value={risk.actionItems} onChange={e => handleRiskChange(risk.id, 'actionItems', e.target.value)} className="w-full bg-gray-800/50 border border-gray-600/50 rounded-md p-1 text-white focus:ring-sky-500 focus:border-sky-500 resize-none h-24" />
                                     </td>
                                 </tr>
                             );
