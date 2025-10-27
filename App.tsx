@@ -13,8 +13,8 @@ import Sidebar from './components/Sidebar';
 import ComplianceDashboard from './components/ComplianceDashboard';
 import LiveAssistant from './components/LiveAssistant';
 import RiskAssessment from './components/RiskAssessment';
+import { View } from './types';
 
-type View = 'complianceDashboard' | 'documentList' | 'viewer' | 'compliance' | 'liveAssistant' | 'riskAssessment';
 const LOCAL_STORAGE_KEY = 'hrsd-documents';
 
 const App: React.FC = () => {
@@ -166,7 +166,7 @@ const App: React.FC = () => {
                 return <LiveAssistant />;
             
             case 'riskAssessment':
-                return <RiskAssessment />;
+                return <RiskAssessment setView={setView} />;
 
             case 'complianceDashboard':
             default:
