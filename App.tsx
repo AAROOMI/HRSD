@@ -5,12 +5,16 @@ import { POLICIES_DATA } from './constants';
 import { generatePolicyDocument } from './services/geminiService';
 import { useTranslation } from './context/LanguageContext';
 import Header from './components/Header';
-import Dashboard from './components/Dashboard';
+import DocumentList from './components/Dashboard';
 import DocumentViewer from './components/DocumentViewer';
 import LoadingSpinner from './components/LoadingSpinner';
 import ComplianceJourney from './components/ComplianceJourney';
+import Sidebar from './components/Sidebar';
+import ComplianceDashboard from './components/ComplianceDashboard';
+import LiveAssistant from './components/LiveAssistant';
+import RiskAssessment from './components/RiskAssessment';
 
-type View = 'dashboard' | 'viewer' | 'compliance';
+type View = 'complianceDashboard' | 'documentList' | 'viewer' | 'compliance' | 'liveAssistant' | 'riskAssessment';
 const LOCAL_STORAGE_KEY = 'hrsd-documents';
 
 const App: React.FC = () => {
@@ -18,17 +22,16 @@ const App: React.FC = () => {
         try {
             const savedDocs = localStorage.getItem(LOCAL_STORAGE_KEY);
             if (savedDocs) {
-                // A more robust solution might validate the schema of the parsed object
                 return JSON.parse(savedDocs);
             }
         } catch (error) {
             console.error("Failed to load documents from localStorage", error);
-            localStorage.removeItem(LOCAL_STORAGE_KEY); // Clear potentially corrupted data
+            localStorage.removeItem(LOCAL_STORAGE_KEY);
         }
         return [];
     });
     
-    const [currentView, setCurrentView] = useState<View>('dashboard');
+    const [currentView, setCurrentView] = useState<View>('complianceDashboard');
     const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
     const [isInitializing, setIsInitializing] = useState<boolean>(documents.length === 0);
     const [error, setError] = useState<string | null>(null);
@@ -45,7 +48,6 @@ const App: React.FC = () => {
         document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
     }, [language]);
 
-    // Persist documents to localStorage whenever they change
     useEffect(() => {
         if (documents.length > 0) {
             try {
@@ -56,7 +58,6 @@ const App: React.FC = () => {
         }
     }, [documents]);
 
-    // Initialize documents only if they are not loaded from localStorage
     useEffect(() => {
         if (documents.length > 0) {
             setIsInitializing(false);
@@ -69,11 +70,10 @@ const App: React.FC = () => {
                 const newDocs: DocumentObject[] = [];
                 const now = new Date();
                 
-                // Process policies sequentially to avoid rate limiting
                 for (const [index, policy] of policies.entries()) {
                     try {
                         const content = await generatePolicyDocument(policy.title, policy.frameworkText);
-                        const docTimestamp = new Date(now.getTime() + index * 1000).toISOString(); // ensure unique timestamps
+                        const docTimestamp = new Date(now.getTime() + index * 1000).toISOString();
                         
                         newDocs.push({
                             id: `HRSD-${Date.now() + index}`,
@@ -87,7 +87,6 @@ const App: React.FC = () => {
                         });
                     } catch (generationError) {
                          console.error(`Failed to generate document for: ${policy.title}`, generationError);
-                         // Continue to the next policy even if one fails
                     }
                 }
                 
@@ -135,7 +134,12 @@ const App: React.FC = () => {
 
     const handleHomeClick = () => {
         setSelectedDocumentId(null);
-        setCurrentView('dashboard');
+        setCurrentView('complianceDashboard');
+    }
+    
+    const setView = (view: View) => {
+        setSelectedDocumentId(null);
+        setCurrentView(view);
     }
 
     const renderContent = () => {
@@ -155,9 +159,18 @@ const App: React.FC = () => {
              case 'compliance':
                 return <ComplianceJourney documents={documents} policies={policies} onBack={handleHomeClick} />;
 
-            case 'dashboard':
+            case 'documentList':
+                return <DocumentList documents={documents} onView={handleViewDocument} />;
+
+            case 'liveAssistant':
+                return <LiveAssistant />;
+            
+            case 'riskAssessment':
+                return <RiskAssessment />;
+
+            case 'complianceDashboard':
             default:
-                return <Dashboard documents={documents} onView={handleViewDocument} onStartJourney={() => setCurrentView('compliance')} />;
+                return <ComplianceDashboard documents={documents} policies={policies} onView={handleViewDocument} />;
         }
     };
     
@@ -167,11 +180,14 @@ const App: React.FC = () => {
                 <div className="w-[80vw] h-[80vh] bg-gradient-to-tr from-sky-400 via-sky-600 to-teal-400 rounded-full blur-[150px] opacity-20 animate-pulse"></div>
             </div>
             
-            <div className="relative z-10 flex flex-col h-screen">
-                <Header onHomeClick={handleHomeClick}/>
-                <main className="flex-grow flex p-4 md:p-8 overflow-hidden">
-                    {renderContent()}
-                </main>
+            <div className="relative z-10 flex h-screen">
+                <Sidebar currentView={currentView} setView={setView} />
+                <div className="flex-grow flex flex-col overflow-hidden">
+                    <Header onHomeClick={handleHomeClick}/>
+                    <main className="flex-grow flex p-4 md:p-8 overflow-hidden">
+                        {renderContent()}
+                    </main>
+                </div>
             </div>
         </div>
     );

@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { DocumentObject, DocumentStatus } from '../types';
 import { useTranslation } from '../context/LanguageContext';
@@ -97,10 +96,8 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onB
                 {document.content.articles.map((article, index) => (
                     <div key={index} className="pl-4 border-l-2 border-sky-500/30">
                         <h3 className="font-semibold text-lg text-teal-300 mb-2">{article.title}</h3>
-                        <div className="space-y-2 section-content">
-                            {article.content.map((clause, cIndex) => (
-                                <p key={cIndex}>{clause}</p>
-                            ))}
+                        <div className="section-content whitespace-pre-wrap">
+                            <p>{article.content}</p>
                         </div>
                     </div>
                 ))}

@@ -20,8 +20,6 @@
     "description": "Description",
     "purpose": "Purpose",
     "scope": "Scope",
-    "procedure": "Procedure",
-    "guidelines": "Guidelines",
     "articles": "Articles & Clauses",
     "status": "Status",
     "lifecycleActions": "Lifecycle Actions",
@@ -76,6 +74,70 @@
     "steps": {
       "select": "Select Policy",
       "review": "Review Plan"
+    }
+  },
+  "complianceDashboard": {
+    "title": "HRSD Compliance Dashboard",
+    "filter": "Filter",
+    "controlStatus": "Control Status",
+    "policyDocuments": "Policy Documents",
+    "table": {
+      "title": "Title",
+      "status": "Status",
+      "version": "Version",
+      "lastUpdated": "Last Updated"
+    }
+  },
+  "liveAssistant": {
+    "title": "Live HRSD Consultant",
+    "description": "Engage in a real-time conversation with your AI-powered HRSD expert. Ask questions about compliance, governance, and audit processes.",
+    "start": "Start Session",
+    "stop": "Stop Session",
+    "status": {
+      "inactive": "Session Inactive",
+      "connecting": "Connecting...",
+      "listening": "Listening...",
+      "speaking": "AI is Speaking...",
+      "error": "An error occurred. Please try again."
+    },
+    "you": "You",
+    "ai": "AI Consultant",
+    "uploadImage": "Upload Image",
+    "uploading": "Uploading...",
+    "uploadSuccess": "Image \"{{fileName}}\" uploaded successfully.",
+    "uploadError": "Failed to upload image.",
+    "uploadStartSession": "Start a session before uploading an image."
+  },
+  "riskAssessment": {
+    "title": "HRSD Risk Assessment Matrix",
+    "filters": {
+      "category": "Filter by Category",
+      "riskLevel": "Filter by Risk Level",
+      "status": "Filter by Status",
+      "all": "All"
+    },
+    "table": {
+      "category": "Category",
+      "riskId": "Risk ID",
+      "description": "Risk Description",
+      "reference": "Framework Ref.",
+      "likelihood": "Likelihood",
+      "impact": "Impact",
+      "riskLevel": "Risk Level",
+      "controls": "Mitigation Controls",
+      "status": "Status",
+      "actions": "Action Items"
+    },
+    "levels": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "severe": "Severe"
+    },
+    "compliance": {
+      "compliant": "Compliant",
+      "partially": "Partially Compliant",
+      "nonCompliant": "Non-Compliant"
     }
   }
 }

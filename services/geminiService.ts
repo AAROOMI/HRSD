@@ -36,11 +36,8 @@ const documentContentSchema = {
                         description: "The full title of the article, for example, 'Article (1): Controls for Amendment and Demotion'."
                     },
                     content: {
-                        type: Type.ARRAY,
-                        items: {
-                            type: Type.STRING
-                        },
-                        description: "An array of strings, where each string is a clause, point (e.g., 'A. The approval to amend...'), or paragraph from within that article."
+                        type: Type.STRING,
+                        description: "The full content of the article as a single string. Preserve original line breaks with newline characters (\\n)."
                     }
                 },
                 required: ["title", "content"]
@@ -86,9 +83,9 @@ export const generatePolicyDocument = async (policyTitle: string, frameworkText:
     1. A concise 'description' summarizing the policy's intent, purpose, and legal basis.
     2. A clear 'scope' defining who the policy applies to.
     3. A defined 'purpose' explaining the policy's objective.
-    4. A detailed list of 'articles', where each article from the source text is an object with a 'title' and an array of its 'content' clauses.
+    4. A detailed list of 'articles', where each article from the source text is an object with a 'title' and a single 'content' string. The content string should contain the full text of the article, with paragraphs separated by newlines.
 
-    Preserve the exact wording and structure of the articles and their clauses.
+    Preserve the exact wording and structure of the articles and their content.
     Adhere strictly to the provided JSON schema for the output. Ensure the language is professional and clear.
 
     Framework Text:

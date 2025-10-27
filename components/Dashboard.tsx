@@ -1,11 +1,11 @@
+
 import React from 'react';
 import { DocumentObject } from '../types';
 import { useTranslation } from '../context/LanguageContext';
 
-interface DashboardProps {
+interface DocumentListProps {
   documents: DocumentObject[];
   onView: (docId: string) => void;
-  onStartJourney: () => void;
 }
 
 const getStatusChipClass = (status: string) => {
@@ -19,22 +19,12 @@ const getStatusChipClass = (status: string) => {
     }
 };
 
-const Dashboard: React.FC<DashboardProps> = ({ documents, onView, onStartJourney }) => {
+const DocumentList: React.FC<DocumentListProps> = ({ documents, onView }) => {
   const { t } = useTranslation();
 
   return (
     <div className="flex-grow w-full bg-black/30 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col p-6 overflow-hidden">
-        <h2 className="text-3xl font-bold tracking-wider mb-4">{t('dashboard.title')}</h2>
-
-        <div className="mb-6 bg-gradient-to-r from-sky-600/30 to-teal-500/30 p-6 rounded-lg border border-sky-400/50 flex flex-col md:flex-row items-center justify-between gap-4">
-            <div>
-                <h3 className="text-xl font-bold text-white">{t('journey.title')}</h3>
-                <p className="text-gray-300 max-w-lg mt-1">{t('journey.description')}</p>
-            </div>
-            <button onClick={onStartJourney} className="bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300 whitespace-nowrap shadow-lg shadow-sky-500/20">
-                {t('journey.start')}
-            </button>
-        </div>
+        <h2 className="text-3xl font-bold tracking-wider mb-6">{t('dashboard.title')}</h2>
 
         <div className="flex-grow overflow-y-auto pe-2">
             {documents.length > 0 ? (
@@ -70,4 +60,4 @@ const Dashboard: React.FC<DashboardProps> = ({ documents, onView, onStartJourney
   );
 };
 
-export default Dashboard;
+export default DocumentList;

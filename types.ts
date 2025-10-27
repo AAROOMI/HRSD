@@ -6,7 +6,7 @@ export interface Policy {
 
 export interface PolicyArticle {
   title: string;
-  content: string[];
+  content: string;
 }
 
 export interface DocumentContent {
@@ -42,4 +42,24 @@ export interface ComplianceStep {
 
 export interface CompliancePlan {
   steps: ComplianceStep[];
+}
+
+export type View = 'complianceDashboard' | 'documentList' | 'viewer' | 'compliance' | 'liveAssistant' | 'riskAssessment';
+
+// --- Risk Assessment Types ---
+export type RiskLikelihood = 'Low' | 'Medium' | 'High';
+export type RiskImpact = 'Low' | 'Medium' | 'High';
+export type RiskComplianceStatus = 'Compliant' | 'Partially Compliant' | 'Non-Compliant';
+export type RiskLevel = 'Low' | 'Moderate' | 'High' | 'Severe';
+
+export interface RiskAssessmentItem {
+  id: string;
+  category: string;
+  riskDescription: string;
+  frameworkReference: string;
+  likelihood: RiskLikelihood;
+  impact: RiskImpact;
+  mitigationControls: string;
+  complianceStatus: RiskComplianceStatus;
+  actionItems: string;
 }
