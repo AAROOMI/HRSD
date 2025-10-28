@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import * as React from 'react';
+const { useState } = React;
 import { DocumentObject, Policy, ComplianceStep, DocumentContent } from '../types';
 import { useTranslation } from '../context/LanguageContext';
 import { generateCompliancePlan } from '../services/geminiService';

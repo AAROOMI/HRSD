@@ -1,5 +1,4 @@
-
-import React from 'react';
+import * as React from 'react';
 
 // This is a placeholder component.
 // It is not currently used in the application but is created to ensure

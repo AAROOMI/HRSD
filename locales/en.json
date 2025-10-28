@@ -149,5 +149,29 @@
       "trackingCodes": "Tracking Codes",
       "close": "Close"
     }
+  },
+  "tour": {
+    "startTour": "Start AI Guided Tour",
+    "agentName": "HRSD Guide",
+    "buttons": {
+      "begin": "Let's Begin",
+      "next": "Next",
+      "skip": "Skip",
+      "yesDoIt": "Yes, do it",
+      "noThanks": "No, thanks",
+      "finish": "Finish Tour",
+      "end": "End Tour"
+    },
+    "steps": {
+      "1": "Hello! I'm your AI Guide. I can walk you through this application and even perform tasks for you. Shall we begin?",
+      "2": "This is your main dashboard. The rings at the top show the compliance status of each policy at a glance. A full green ring is 100% compliant.",
+      "3": "Down here is a detailed list of all policy documents. Let's take a closer look at the 'Performance Management' policy. Shall I open it for you?",
+      "4": "Great, here is the full policy document.",
+      "5": "On the right, you can see the lifecycle actions. Since this document is a 'Draft', you can submit it for approval. Would you like me to do that for you now?",
+      "6": "Excellent. I've submitted it. Notice the audit trail has been updated. Let's go to the Risk Assessment Matrix next.",
+      "7": "This is the Risk Assessment Matrix. It's pre-populated with potential risks based on the HRSD framework. You can filter, edit, and add new risks here.",
+      "8": "The final key area is the Live Assistant, where you can speak in real-time with an AI consultant about compliance. We won't start a session now, but you can explore it later.",
+      "9": "That concludes our guided tour! You can restart this tour anytime from the header. Enjoy using the application!"
+    }
   }
 }

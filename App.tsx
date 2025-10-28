@@ -1,6 +1,6 @@
-
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
-import { Policy, DocumentObject, DocumentStatus, DocumentContent } from './types';
+import * as React from 'react';
+const { useState, useCallback, useMemo, useEffect } = React;
+import { Policy, DocumentObject, DocumentStatus, DocumentContent, TourState } from './types';
 import { POLICIES_DATA } from './constants';
 import { generatePolicyDocument } from './services/geminiService';
 import { useTranslation } from './context/LanguageContext';
@@ -13,6 +13,7 @@ import Sidebar from './components/Sidebar';
 import ComplianceDashboard from './components/ComplianceDashboard';
 import LiveAssistant from './components/LiveAssistant';
 import RiskAssessment from './components/RiskAssessment';
+import TourAgent from './components/TourAgent';
 import { View } from './types';
 
 const LOCAL_STORAGE_KEY = 'hrsd-documents';
@@ -35,6 +36,7 @@ const App: React.FC = () => {
     const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
     const [isInitializing, setIsInitializing] = useState<boolean>(documents.length === 0);
     const [error, setError] = useState<string | null>(null);
+    const [tourState, setTourState] = useState<TourState>({ isActive: false, step: 0 });
     const { language } = useTranslation();
 
     const policies: Policy[] = useMemo(() => Object.keys(POLICIES_DATA).map(key => ({
@@ -142,6 +144,11 @@ const App: React.FC = () => {
         setCurrentView(view);
     }
 
+    const startTour = () => {
+        setView('complianceDashboard');
+        setTourState({ isActive: true, step: 1 });
+    };
+
     const renderContent = () => {
         if (isInitializing) {
              return <div className="flex-grow w-full flex items-center justify-center"><LoadingSpinner isInitializing={true} policyCount={policies.length} /></div>;
@@ -154,7 +161,7 @@ const App: React.FC = () => {
         switch (currentView) {
             case 'viewer':
                 const doc = documents.find(d => d.id === selectedDocumentId);
-                return doc ? <DocumentViewer document={doc} onUpdate={handleUpdateDocument} onBack={handleHomeClick} /> : <p>Document not found.</p>;
+                return doc ? <DocumentViewer document={doc} onUpdate={handleUpdateDocument} onBack={handleHomeClick} tourState={tourState} /> : <p>Document not found.</p>;
             
              case 'compliance':
                 return <ComplianceJourney documents={documents} policies={policies} onBack={handleHomeClick} />;
@@ -163,14 +170,15 @@ const App: React.FC = () => {
                 return <DocumentList documents={documents} onView={handleViewDocument} />;
 
             case 'liveAssistant':
-                return <LiveAssistant />;
+                return <LiveAssistant tourState={tourState}/>;
             
             case 'riskAssessment':
-                return <RiskAssessment setView={setView} />;
+                return <RiskAssessment setView={setView} tourState={tourState} />;
 
             case 'complianceDashboard':
             default:
-                return <ComplianceDashboard documents={documents} policies={policies} onView={handleViewDocument} />;
+                const performanceDoc = documents.find(d => d.policyTitle === 'Performance Management');
+                return <ComplianceDashboard documents={documents} policies={policies} onView={handleViewDocument} tourState={tourState} performanceDocId={performanceDoc?.id}/>;
         }
     };
     
@@ -181,14 +189,24 @@ const App: React.FC = () => {
             </div>
             
             <div className="relative z-10 flex h-screen">
-                <Sidebar currentView={currentView} setView={setView} />
+                <Sidebar currentView={currentView} setView={setView} tourState={tourState}/>
                 <div className="flex-grow flex flex-col overflow-hidden">
-                    <Header onHomeClick={handleHomeClick}/>
+                    <Header onHomeClick={handleHomeClick} onStartTour={startTour}/>
                     <main className="flex-grow flex p-4 md:p-8 overflow-hidden">
                         {renderContent()}
                     </main>
                 </div>
             </div>
+             {tourState.isActive && (
+                <TourAgent
+                    tourState={tourState}
+                    setTourState={setTourState}
+                    setView={setView}
+                    handleViewDocument={handleViewDocument}
+                    handleUpdateDocument={handleUpdateDocument}
+                    documents={documents}
+                />
+            )}
         </div>
     );
 };

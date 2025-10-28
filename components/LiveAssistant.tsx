@@ -1,5 +1,6 @@
-import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob } from '@google/genai';
+import * as React from 'react';
+const { useState, useRef, useEffect, useCallback } = React;
+import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, TourState } from '@google/genai';
 import { useTranslation } from '../context/LanguageContext';
 
 // --- Helper Functions ---
@@ -83,7 +84,11 @@ type Status = 'inactive' | 'connecting' | 'listening' | 'speaking' | 'error';
 
 const TRANSCRIPTS_STORAGE_KEY = 'live-assistant-transcripts';
 
-const LiveAssistant: React.FC = () => {
+interface LiveAssistantProps {
+    tourState: TourState;
+}
+
+const LiveAssistant: React.FC<LiveAssistantProps> = ({ tourState }) => {
     const { t } = useTranslation();
     const [status, setStatus] = useState<Status>('inactive');
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -361,7 +366,7 @@ const LiveAssistant: React.FC = () => {
     };
 
     return (
-        <div className="flex-grow w-full bg-black/30 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col p-6 overflow-hidden">
+        <div className={`flex-grow w-full bg-black/30 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col p-6 overflow-hidden ${tourState.isActive && tourState.step === 8 ? 'highlight-tour-element' : ''}`}>
             <h2 className="text-3xl font-bold tracking-wider mb-2">{t('liveAssistant.title')}</h2>
             <p className="text-gray-400 mb-6">{t('liveAssistant.description')}</p>
 

@@ -1,5 +1,4 @@
-
-import React from 'react';
+import * as React from 'react';
 import Barcode from 'react-barcode';
 
 interface BarcodeProps {
@@ -11,8 +10,8 @@ const BarcodeComponent: React.FC<BarcodeProps> = ({ value }) => {
     <Barcode 
       value={value}
       format="CODE128"
-      width={1.5}
-      height={30}
+      width={2}
+      height={40}
       displayValue={false}
       margin={0}
       background="#ffffff"

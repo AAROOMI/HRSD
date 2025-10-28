@@ -80,12 +80,11 @@ export const generatePolicyDocument = async (policyTitle: string, frameworkText:
     
     const prompt = `Based on the following HRSD regulatory framework text for "${policyTitle}", generate a structured policy document.
     The document must include:
-    1. A concise 'description' summarizing the policy's intent, purpose, and legal basis.
+    1. A very clear and concise 'description' summarizing the policy's core intent, primary purpose, and legal basis. This should be a single, well-crafted paragraph.
     2. A clear 'scope' defining who the policy applies to.
     3. A defined 'purpose' explaining the policy's objective.
-    4. A detailed list of 'articles', where each article from the source text is an object with a 'title' and a single 'content' string. The content string should contain the full text of the article, with paragraphs separated by newlines.
+    4. A detailed list of 'articles'. Each article object must have a 'title' and a 'content' string. It is critical that the 'content' string is an exact, verbatim copy of the source article text. All original line breaks, paragraphing, and formatting must be perfectly preserved using newline characters (\\n). Do not summarize, alter, or rephrase any part of the article content.
 
-    Preserve the exact wording and structure of the articles and their content.
     Adhere strictly to the provided JSON schema for the output. Ensure the language is professional and clear.
 
     Framework Text:
@@ -101,7 +100,6 @@ export const generatePolicyDocument = async (policyTitle: string, frameworkText:
             config: {
                 responseMimeType: "application/json",
                 responseSchema: documentContentSchema,
-                temperature: 0.3,
             },
         });
         
@@ -154,7 +152,6 @@ export const generateCompliancePlan = async (policy: Policy, currentDocumentCont
             config: {
                 responseMimeType: "application/json",
                 responseSchema: compliancePlanSchema,
-                temperature: 0.5,
             },
         });
 

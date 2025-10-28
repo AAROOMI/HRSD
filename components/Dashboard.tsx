@@ -1,5 +1,4 @@
-
-import React from 'react';
+import * as React from 'react';
 import { DocumentObject } from '../types';
 import { useTranslation } from '../context/LanguageContext';
 

@@ -1,4 +1,5 @@
-import React, { createContext, useState, useContext, ReactNode, useMemo, useEffect } from 'react';
+import * as React from 'react';
+const { createContext, useState, useContext, useMemo, useEffect } = React;
 
 type Language = 'en' | 'ar';
 
@@ -10,7 +11,7 @@ interface LanguageContextType {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
-export const LanguageProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const LanguageProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [language, setLanguage] = useState<Language>('en');
   const [translations, setTranslations] = useState<{ en: any, ar: any } | null>(null);
 

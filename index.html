@@ -17,11 +17,49 @@
     "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "@google/genai": "https://aistudiocdn.com/@google/genai@^1.27.0",
-    "qrcode.react": "https://esm.sh/qrcode.react@3.1.0",
-    "react-barcode": "https://esm.sh/react-barcode@1.5.1"
+    "qrcode.react": "https://esm.sh/qrcode.react@3.1.0?external=react",
+    "react-barcode": "https://esm.sh/react-barcode@1.5.1?external=react"
   }
 }
 </script>
+<style>
+  .highlight-tour-element {
+      position: relative;
+      z-index: 9990;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.9), 0 0 15px 5px rgba(59, 130, 246, 0.5);
+      border-radius: 0.75rem;
+      transition: box-shadow 0.3s ease-in-out;
+      margin: 2px; /* Prevent outline clipping */
+  }
+
+  .tour-agent-container {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    z-index: 10000;
+    display: flex;
+    align-items: flex-end;
+    gap: 1rem;
+    pointer-events: none; /* Pass clicks through the container */
+  }
+
+  .tour-agent-bubble {
+    background-color: rgba(17, 24, 39, 0.9);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    width: 320px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+    pointer-events: auto; /* Enable clicks on the bubble */
+    animation: fadeIn 0.5s ease-out;
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+</style>
 </head>
   <body>
     <div id="root"></div>

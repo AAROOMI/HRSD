@@ -1,5 +1,4 @@
-
-import React from 'react';
+import * as React from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 
 interface QRCodeProps {
@@ -10,7 +9,7 @@ const QRCode: React.FC<QRCodeProps> = ({ value }) => {
   return (
     <QRCodeCanvas
       value={value}
-      size={64}
+      size={80}
       bgColor={"#ffffff"}
       fgColor={"#000000"}
       level={"L"}

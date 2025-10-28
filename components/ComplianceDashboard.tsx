@@ -1,6 +1,5 @@
-
-import React from 'react';
-import { DocumentObject, Policy, DocumentStatus } from '../types';
+import * as React from 'react';
+import { DocumentObject, Policy, DocumentStatus, TourState } from '../types';
 import { useTranslation } from '../context/LanguageContext';
 import PolicyRing from './PolicyRing';
 
@@ -8,6 +7,8 @@ interface ComplianceDashboardProps {
   documents: DocumentObject[];
   policies: Policy[];
   onView: (docId: string) => void;
+  tourState: TourState;
+  performanceDocId?: string;
 }
 
 const getStatusChipClass = (status: string) => {
@@ -35,7 +36,7 @@ const getStatusPercentage = (status: DocumentStatus | 'Not Generated'): number =
     }
 };
 
-const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({ documents, policies, onView }) => {
+const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({ documents, policies, onView, tourState, performanceDocId }) => {
   const { t } = useTranslation();
 
   const complianceData = policies.map(policy => {
@@ -60,7 +61,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({ documents, po
         </div>
 
         {/* Rings section */}
-        <div className="bg-white/5 p-4 md:p-6 rounded-lg border border-white/10 mb-6 flex-shrink-0">
+        <div className={`bg-white/5 p-4 md:p-6 rounded-lg border border-white/10 mb-6 flex-shrink-0 ${tourState.isActive && tourState.step === 2 ? 'highlight-tour-element' : ''}`}>
             <h3 className="font-semibold text-lg mb-4 text-gray-300">{t('complianceDashboard.controlStatus')}</h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-11 gap-4 justify-items-center">
                  {complianceData.map(data => (
@@ -76,7 +77,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({ documents, po
         </div>
 
         {/* Table section */}
-        <div className="bg-white/5 p-4 md:p-6 rounded-lg border border-white/10 flex-grow flex flex-col overflow-hidden">
+        <div className={`bg-white/5 p-4 md:p-6 rounded-lg border border-white/10 flex-grow flex flex-col overflow-hidden ${tourState.isActive && tourState.step === 3 ? 'highlight-tour-element' : ''}`}>
             <h3 className="font-semibold text-lg mb-4 text-gray-300">{t('complianceDashboard.policyDocuments')}</h3>
             <div className="flex-grow overflow-y-auto -mx-4 md:-mx-6 px-4 md:px-6">
                 <table className="w-full text-left">
@@ -90,7 +91,7 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({ documents, po
                     </thead>
                     <tbody className="divide-y divide-white/10">
                         {complianceData.map(({ policy, doc, status }) => (
-                            <tr key={policy.id} onClick={() => doc && onView(doc.id)} className={`transition-colors ${doc ? 'cursor-pointer hover:bg-white/10' : 'opacity-60'}`}>
+                            <tr key={policy.id} onClick={() => doc && onView(doc.id)} className={`transition-colors ${doc ? 'cursor-pointer hover:bg-white/10' : 'opacity-60'} ${tourState.isActive && tourState.step === 3 && doc?.id === performanceDocId ? 'bg-sky-500/20' : ''}`}>
                                 <td className="p-3 font-medium text-white">{policy.title}</td>
                                 <td className="p-3">
                                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusChipClass(status)}`}>

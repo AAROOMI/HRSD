@@ -1,5 +1,5 @@
-import React from 'react';
-import { DocumentObject, DocumentStatus } from '../types';
+import * as React from 'react';
+import { DocumentObject, DocumentStatus, TourState } from '../types';
 import { useTranslation } from '../context/LanguageContext';
 import QRCode from './QRCode';
 import Barcode from './Barcode';
@@ -8,6 +8,7 @@ interface DocumentViewerProps {
   document: DocumentObject;
   onUpdate: (docId: string, status: DocumentStatus, notes: string) => void;
   onBack: () => void;
+  tourState: TourState;
 }
 
 const StatusIcon: React.FC<{ status: DocumentStatus }> = ({ status }) => {
@@ -40,7 +41,7 @@ const StatusIcon: React.FC<{ status: DocumentStatus }> = ({ status }) => {
 };
 
 
-const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onBack }) => {
+const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onBack, tourState }) => {
     const { t } = useTranslation();
     
     const handleAction = (status: DocumentStatus) => {
@@ -113,7 +114,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onB
                 <p className="font-bold text-lg text-teal-300">{document.status}</p>
             </div>
 
-            <div>
+            <div className={tourState.isActive && tourState.step === 5 ? 'highlight-tour-element' : ''}>
                 <h3 className="sidebar-title">{t('documentViewer.lifecycleActions')}</h3>
                 <div className="flex flex-col gap-2">{renderActions()}</div>
             </div>
@@ -129,7 +130,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onB
 
             <div>
                 <h3 className="sidebar-title">{t('documentViewer.trackingCodes')}</h3>
-                <div className="bg-white p-2 rounded-lg flex items-center justify-around">
+                <div className="bg-white p-4 rounded-lg flex flex-col items-center justify-center gap-4">
                     <QRCode value={document.id} />
                     <Barcode value={document.id} />
                 </div>

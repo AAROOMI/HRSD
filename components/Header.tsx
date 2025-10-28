@@ -1,13 +1,13 @@
-
-import React from 'react';
+import * as React from 'react';
 import { useTranslation } from '../context/LanguageContext';
 import LanguageSwitcher from './LanguageSwitcher';
 
 interface HeaderProps {
     onHomeClick: () => void;
+    onStartTour: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onHomeClick }) => {
+const Header: React.FC<HeaderProps> = ({ onHomeClick, onStartTour }) => {
     const { t } = useTranslation();
 
     return (
@@ -21,7 +21,15 @@ const Header: React.FC<HeaderProps> = ({ onHomeClick }) => {
                     <p className="text-xs text-gray-400">{t('header.subtitle')}</p>
                 </div>
             </div>
-            <LanguageSwitcher />
+            <div className="flex items-center gap-4">
+                 <button 
+                    onClick={onStartTour}
+                    className="px-4 py-2 bg-sky-600/50 border border-sky-500/50 rounded-lg text-sm font-semibold text-sky-200 hover:bg-sky-500/50 transition-colors"
+                 >
+                    {t('tour.startTour')}
+                </button>
+                <LanguageSwitcher />
+            </div>
         </header>
     );
 };

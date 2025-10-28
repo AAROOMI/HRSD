@@ -46,6 +46,11 @@ export interface CompliancePlan {
 
 export type View = 'complianceDashboard' | 'documentList' | 'viewer' | 'compliance' | 'liveAssistant' | 'riskAssessment';
 
+export interface TourState {
+  isActive: boolean;
+  step: number;
+}
+
 // --- Risk Assessment Types ---
 export type RiskLikelihood = 'Low' | 'Medium' | 'High';
 export type RiskImpact = 'Low' | 'Medium' | 'High';

@@ -1,7 +1,7 @@
-
-import React, { useState, useMemo } from 'react';
+import * as React from 'react';
+const { useState, useMemo } = React;
 import { useTranslation } from '../context/LanguageContext';
-import { RiskAssessmentItem, RiskLikelihood, RiskImpact, RiskLevel, RiskComplianceStatus, View } from '../types';
+import { RiskAssessmentItem, RiskLikelihood, RiskImpact, RiskLevel, RiskComplianceStatus, View, TourState } from '../types';
 import QRCode from './QRCode';
 import Barcode from './Barcode';
 
@@ -47,6 +47,7 @@ const initialRiskData: RiskAssessmentItem[] = [
 
 interface RiskAssessmentProps {
   setView: (view: View) => void;
+  tourState: TourState;
 }
 
 const calculateRiskLevel = (likelihood: RiskLikelihood, impact: RiskImpact): { level: RiskLevel, className: string } => {
@@ -65,7 +66,7 @@ const calculateRiskLevel = (likelihood: RiskLikelihood, impact: RiskImpact): { l
     return { level: 'Low', className: 'bg-teal-500 text-white' };
 };
 
-const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView }) => {
+const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) => {
     const { t } = useTranslation();
     const [risks, setRisks] = useState<RiskAssessmentItem[]>(initialRiskData);
     const [categoryFilter, setCategoryFilter] = useState('All');
@@ -88,6 +89,12 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView }) => {
 
     const handleRiskChange = (id: string, field: keyof RiskAssessmentItem, value: string) => {
         setRisks(prevRisks => prevRisks.map(risk => risk.id === id ? { ...risk, [field]: value } : risk));
+    };
+    
+    const handleResetFilters = () => {
+        setCategoryFilter('All');
+        setRiskLevelFilter('All');
+        setStatusFilter('All');
     };
 
     const categories = useMemo(() => ['All', ...Array.from(new Set(initialRiskData.map(r => r.category)))], []);
@@ -118,7 +125,10 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView }) => {
         setIsModalOpen(true);
     };
 
-    const handleCloseModal = () => setIsModalOpen(false);
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+        setNewRisk(initialNewRiskState);
+    };
 
     const handleNewRiskChange = (field: keyof Omit<RiskAssessmentItem, 'id'>, value: string) => {
         setNewRisk(prev => ({ ...prev, [field]: value }));
@@ -161,6 +171,9 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView }) => {
                     <option className="bg-gray-900 text-white" value="All">{t('riskAssessment.filters.all')} {t('riskAssessment.table.status')}</option>
                      {complianceStatuses.map(s => <option className="bg-gray-900 text-white" key={s} value={s}>{s}</option>)}
                 </select>
+                <button onClick={handleResetFilters} className="px-4 py-1.5 bg-gray-700 hover:bg-gray-600 text-white rounded-md transition-colors text-sm font-semibold">
+                    Reset Filters
+                </button>
                 <div className="ml-auto flex items-center gap-4">
                     <button onClick={() => setView('liveAssistant')} className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-1.5 rounded-md flex items-center gap-2 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -179,7 +192,7 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView }) => {
             </div>
 
             {/* Table */}
-            <div className="flex-grow overflow-auto">
+            <div className={`flex-grow overflow-auto ${tourState.isActive && tourState.step === 7 ? 'highlight-tour-element' : ''}`}>
                 <table className="w-full text-sm text-left border-collapse">
                     <thead className="sticky top-0 bg-black/50 backdrop-blur-sm">
                         <tr className="border-b border-white/20 text-gray-300">
