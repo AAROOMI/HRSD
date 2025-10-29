@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { DocumentObject, DocumentStatus, TourState } from '../types';
 import { useTranslation } from '../context/LanguageContext';
@@ -71,6 +72,13 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onB
                 return null;
         }
     }
+
+    const qrData = {
+        id: document.id,
+        policyTitle: document.policyTitle,
+        status: document.status,
+        version: document.version,
+    };
     
   return (
     <div className="flex-grow w-full bg-black/30 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-row-reverse lg:flex-row overflow-hidden">
@@ -131,7 +139,7 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onB
             <div>
                 <h3 className="sidebar-title">{t('documentViewer.trackingCodes')}</h3>
                 <div className="bg-white p-4 rounded-lg flex flex-col items-center justify-center gap-4">
-                    <QRCode value={document.id} />
+                    <QRCode value={qrData} />
                     <Barcode value={document.id} />
                 </div>
             </div>

@@ -1,6 +1,7 @@
+
 import * as React from 'react';
-const { useState } = React;
-import { DocumentObject, Policy, ComplianceStep, DocumentContent } from '../types';
+const { useState, useEffect, useRef } = React;
+import { DocumentObject, Policy, ComplianceStep } from '../types';
 import { useTranslation } from '../context/LanguageContext';
 import { generateCompliancePlan } from '../services/geminiService';
 import LoadingSpinner from './LoadingSpinner';
@@ -10,6 +11,11 @@ interface ComplianceJourneyProps {
   policies: Policy[];
   onBack: () => void;
 }
+
+type AnalysisError = {
+  title: string;
+  description: string;
+};
 
 const Stepper: React.FC<{ currentStep: number }> = ({ currentStep }) => {
     const { t } = useTranslation();
@@ -46,7 +52,30 @@ const ComplianceJourney: React.FC<ComplianceJourneyProps> = ({ documents, polici
     const [selectedPolicy, setSelectedPolicy] = useState<Policy | null>(null);
     const [isLoading, setIsLoading] = useState(false);
     const [compliancePlan, setCompliancePlan] = useState<ComplianceStep[] | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<AnalysisError | null>(null);
+    const [analysisMessage, setAnalysisMessage] = useState('');
+    const analysisMessageIndex = useRef(0);
+
+    useEffect(() => {
+        let timer: number;
+        const messages = t('journey.analyzing.messages', {}) as unknown as string[];
+        
+        if (isLoading && Array.isArray(messages) && messages.length > 0) {
+            analysisMessageIndex.current = 0;
+            setAnalysisMessage(messages[0]);
+
+            timer = window.setInterval(() => {
+                analysisMessageIndex.current = (analysisMessageIndex.current + 1) % messages.length;
+                setAnalysisMessage(messages[analysisMessageIndex.current]);
+            }, 2000); // Change message every 2 seconds
+        }
+
+        return () => {
+            if (timer) {
+                clearInterval(timer);
+            }
+        };
+    }, [isLoading, t]);
 
     const handleAnalyzePolicy = async (policy: Policy) => {
         setSelectedPolicy(policy);
@@ -57,7 +86,10 @@ const ComplianceJourney: React.FC<ComplianceJourneyProps> = ({ documents, polici
 
         const relatedDocument = documents.find(d => d.policyTitle === policy.title);
         if (!relatedDocument) {
-            setError(t('journey.error.description')); // A more specific error could be useful
+            setError({
+                title: t('journey.error.noDocumentTitle'),
+                description: t('journey.error.noDocumentDescription', { policyTitle: policy.title })
+            });
             setIsLoading(false);
             setStep(3);
             return;
@@ -67,8 +99,11 @@ const ComplianceJourney: React.FC<ComplianceJourneyProps> = ({ documents, polici
             const plan = await generateCompliancePlan(policy, relatedDocument.content);
             setCompliancePlan(plan.steps);
         } catch (err) {
-            setError(t('journey.error.description'));
             console.error(err);
+            setError({
+                title: t('journey.error.apiErrorTitle'),
+                description: t('journey.error.apiErrorDescription')
+            });
         } finally {
             setIsLoading(false);
             setStep(3);
@@ -85,10 +120,13 @@ const ComplianceJourney: React.FC<ComplianceJourneyProps> = ({ documents, polici
     const renderContent = () => {
         if (isLoading) {
              return (
-                 <div className="text-center">
+                 <div key="analyzing" className="fade-in-content text-center">
                     <LoadingSpinner />
                     <h3 className="text-2xl font-bold mt-4">{t('journey.analyzing.title')}</h3>
-                    <p className="text-gray-400 mt-2">{t('journey.analyzing.description', { policyTitle: selectedPolicy?.title || '' })}</p>
+                    <p className="text-gray-400 mt-2 max-w-xl mx-auto">{t('journey.analyzing.description', { policyTitle: selectedPolicy?.title || '' })}</p>
+                    <div className="mt-4 h-6 text-sky-300 transition-opacity duration-500">
+                        {analysisMessage}
+                    </div>
                 </div>
             );
         }
@@ -96,7 +134,7 @@ const ComplianceJourney: React.FC<ComplianceJourneyProps> = ({ documents, polici
         switch (step) {
             case 0: // Intro
                 return (
-                    <div className="text-center max-w-2xl mx-auto">
+                    <div key="intro" className="fade-in-content text-center max-w-2xl mx-auto">
                         <h2 className="text-3xl font-bold mb-4">{t('journey.welcome.title')}</h2>
                         <p className="text-gray-300 mb-8">{t('journey.welcome.description')}</p>
                         <button onClick={() => setStep(1)} className="bg-sky-500 hover:bg-sky-400 text-white font-bold py-3 px-6 rounded-lg transition-colors duration-300">
@@ -107,7 +145,7 @@ const ComplianceJourney: React.FC<ComplianceJourneyProps> = ({ documents, polici
             
             case 1: // Select Policy
                 return (
-                    <div>
+                    <div key="select" className="fade-in-content w-full">
                         <Stepper currentStep={1} />
                         <h2 className="text-2xl font-bold text-center mb-2">{t('journey.select.title')}</h2>
                         <p className="text-gray-400 text-center mb-8">{t('journey.select.description')}</p>
@@ -124,12 +162,12 @@ const ComplianceJourney: React.FC<ComplianceJourneyProps> = ({ documents, polici
 
             case 3: // Plan or Error
                  return (
-                    <div>
+                    <div key="result" className="fade-in-content w-full">
                         <Stepper currentStep={2} />
                         {error ? (
                              <div className="text-center max-w-xl mx-auto">
-                                <h2 className="text-2xl font-bold text-red-400 mb-2">{t('journey.error.title')}</h2>
-                                <p className="text-gray-400 mb-6">{error}</p>
+                                <h2 className="text-2xl font-bold text-red-400 mb-2">{error.title}</h2>
+                                <p className="text-gray-400 mb-6">{error.description}</p>
                                 <button onClick={resetJourney} className="bg-gray-600 hover:bg-gray-500 text-white font-bold py-2 px-5 rounded-lg transition-colors duration-300">
                                      {t('journey.error.tryAgain')}
                                 </button>
@@ -161,6 +199,8 @@ const ComplianceJourney: React.FC<ComplianceJourneyProps> = ({ documents, polici
                         )}
                     </div>
                 );
+            default:
+                return null;
         }
     };
 

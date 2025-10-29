@@ -2,8 +2,10 @@ import * as React from 'react';
 const { useState, useMemo } = React;
 import { useTranslation } from '../context/LanguageContext';
 import { RiskAssessmentItem, RiskLikelihood, RiskImpact, RiskLevel, RiskComplianceStatus, View, TourState } from '../types';
+import { analyzeRisks } from '../services/geminiService';
 import QRCode from './QRCode';
 import Barcode from './Barcode';
+import LoadingSpinner from './LoadingSpinner';
 
 const initialRiskData: RiskAssessmentItem[] = [
     // Performance Management
@@ -74,6 +76,8 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) =
     const [statusFilter, setStatusFilter] = useState('All');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedRisk, setSelectedRisk] = useState<RiskAssessmentItem | null>(null);
+    const [isAnalyzing, setIsAnalyzing] = useState(false);
+    const [analysisReport, setAnalysisReport] = useState<string | null>(null);
 
     const initialNewRiskState: Omit<RiskAssessmentItem, 'id'> = {
         category: '',
@@ -152,6 +156,21 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) =
         setRisks(prev => [...prev, newRiskItem].sort((a, b) => a.category.localeCompare(b.category) || a.id.localeCompare(b.id)));
         handleCloseModal();
     };
+    
+    const handleRunAnalysis = async () => {
+        setIsAnalyzing(true);
+        setAnalysisReport(null);
+        try {
+            const { updatedRisks, summary } = await analyzeRisks(risks);
+            setRisks(updatedRisks);
+            setAnalysisReport(summary);
+        } catch (error) {
+            console.error("AI risk analysis failed:", error);
+            setAnalysisReport(t('riskAssessment.analysis.error'));
+        } finally {
+            setIsAnalyzing(false);
+        }
+    };
 
     return (
         <div className="flex-grow w-full bg-black/30 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col p-6 overflow-hidden">
@@ -175,12 +194,15 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) =
                     Reset Filters
                 </button>
                 <div className="ml-auto flex items-center gap-4">
-                    <button onClick={() => setView('liveAssistant')} className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-1.5 rounded-md flex items-center gap-2 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                           <path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z" />
-                           <path fillRule="evenodd" d="M5.5 8.5a.5.5 0 01.5.5v1a3.5 3.5 0 003.5 3.5h1a3.5 3.5 0 003.5-3.5v-1a.5.5 0 011 0v1a4.5 4.5 0 01-4.5 4.5h-1A4.5 4.5 0 015 9.5v-1a.5.5 0 01.5-.5z" clipRule="evenodd" />
-                        </svg>
-                        {t('riskAssessment.voiceAssessment')}
+                    <button onClick={handleRunAnalysis} disabled={isAnalyzing} className="bg-purple-600 hover:bg-purple-500 text-white font-bold px-4 py-1.5 rounded-md flex items-center gap-2 transition-colors disabled:bg-purple-800 disabled:cursor-not-allowed">
+                        {isAnalyzing ? (
+                            <div className="w-5 h-5 border-2 border-t-white border-r-white border-b-white/20 border-l-white/20 rounded-full animate-spin"></div>
+                        ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 011-1h.5a1.5 1.5 0 000-3H6a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" />
+                            </svg>
+                        )}
+                        {isAnalyzing ? t('riskAssessment.analysis.running') : t('riskAssessment.analysis.run')}
                     </button>
                     <button onClick={handleOpenModal} className="bg-sky-600 hover:bg-sky-500 text-white font-bold px-4 py-1.5 rounded-md flex items-center gap-2 transition-colors">
                         <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -253,6 +275,42 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) =
                     </tbody>
                 </table>
             </div>
+            
+            {/* AI Analysis Modal */}
+            {(isAnalyzing || analysisReport) && (
+                <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-900 border border-white/20 rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col">
+                        <div className="p-6 border-b border-white/10">
+                            <h3 className="text-2xl font-bold">{isAnalyzing ? t('riskAssessment.analysis.title') : t('riskAssessment.analysis.reportTitle')}</h3>
+                        </div>
+                        <div className="p-6 overflow-y-auto">
+                            {isAnalyzing ? (
+                                <div className="flex flex-col items-center justify-center gap-4 text-center py-8">
+                                    <LoadingSpinner />
+                                    <p className="text-gray-300 mt-4">{t('riskAssessment.analysis.description')}</p>
+                                </div>
+                            ) : (
+                                <div>
+                                    <h4 className="font-semibold text-lg mb-3 text-teal-300">{t('riskAssessment.analysis.summaryTitle')}</h4>
+                                    <div className="whitespace-pre-wrap bg-black/20 p-4 rounded-md text-gray-300 border border-white/10 max-h-96 overflow-y-auto">
+                                        {analysisReport}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                        <div className="p-4 border-t border-white/10 flex justify-end bg-gray-900/50 rounded-b-2xl">
+                            <button
+                                onClick={() => setAnalysisReport(null)}
+                                disabled={isAnalyzing}
+                                className="px-5 py-2 bg-gray-700 hover:bg-gray-600 rounded-md font-semibold transition-colors disabled:opacity-50"
+                            >
+                                {t('riskAssessment.modal.close')}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
 
             {/* View Risk Details Modal */}
             {selectedRisk && (

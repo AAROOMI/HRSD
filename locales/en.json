@@ -60,7 +60,15 @@
     },
     "analyzing": {
       "title": "Agent AI is Analyzing...",
-      "description": "Please wait while the agent compares the document for '{{policyTitle}}' with the HRSD framework to identify compliance gaps."
+      "description": "Please wait while the agent compares the document for '{{policyTitle}}' with the HRSD framework to identify compliance gaps.",
+      "messages": [
+        "Parsing regulatory framework...",
+        "Comparing against current document...",
+        "Identifying potential compliance gaps...",
+        "Cross-referencing articles and clauses...",
+        "Formulating actionable steps...",
+        "Finalizing compliance plan..."
+      ]
     },
     "plan": {
       "title": "Step 2: Review Compliance Plan",
@@ -70,6 +78,10 @@
     "error": {
       "title": "Analysis Failed",
       "description": "The AI agent was unable to generate a compliance plan. This could be due to a network issue or a problem with the service. Please try again later.",
+      "noDocumentTitle": "Document Not Found",
+      "noDocumentDescription": "Could not find a generated document for '{{policyTitle}}'. Please ensure the document exists before starting the analysis.",
+      "apiErrorTitle": "Service Unavailable",
+      "apiErrorDescription": "The AI service could not be reached. This may be due to a network issue or an invalid API key. Please check your connection and configuration.",
       "tryAgain": "Try Another Policy"
     },
     "steps": {
@@ -112,7 +124,6 @@
   "riskAssessment": {
     "title": "HRSD Risk Assessment Matrix",
     "addNewRisk": "Add New Risk",
-    "voiceAssessment": "AI Voice Assessment",
     "filters": {
       "category": "Filter by Category",
       "riskLevel": "Filter by Risk Level",
@@ -148,6 +159,15 @@
       "description": "Description",
       "trackingCodes": "Tracking Codes",
       "close": "Close"
+    },
+    "analysis": {
+      "run": "Run AI Risk Analysis",
+      "running": "Analyzing...",
+      "title": "AI Risk Analysis in Progress",
+      "description": "Please wait while the agent reviews your risk matrix to suggest improvements.",
+      "reportTitle": "AI Analysis Complete",
+      "summaryTitle": "Summary of Changes",
+      "error": "The AI analysis failed. Please check the console for details and try again."
     }
   },
   "tour": {
