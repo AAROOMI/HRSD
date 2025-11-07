@@ -1,3 +1,4 @@
+
 import * as React from 'react';
 import { View, TourState } from '../types';
 
@@ -33,7 +34,7 @@ const NavItem: React.FC<{
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, setView, tourState }) => {
     return (
-        <nav className="flex-shrink-0 w-20 bg-black/30 backdrop-blur-lg border-r border-white/10 p-2 flex flex-col items-center">
+        <nav className="flex-shrink-0 w-20 bg-black/30 backdrop-blur-lg border-r border-white/10 p-2 flex flex-col items-center print:hidden">
             <div className="w-12 h-12 bg-gradient-to-br from-sky-400 to-teal-400 rounded-lg flex items-center justify-center mb-6 flex-shrink-0">
                 <span className="text-2xl font-bold text-white">HR</span>
             </div>

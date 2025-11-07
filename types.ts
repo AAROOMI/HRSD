@@ -5,7 +5,7 @@ export interface Policy {
 }
 
 export interface PolicyArticle {
-  title: string;
+  title:string;
   content: string;
 }
 
@@ -22,6 +22,7 @@ export interface HistoryLog {
   timestamp: string;
   status: DocumentStatus;
   notes: string;
+  user: string;
 }
 
 export interface DocumentObject {

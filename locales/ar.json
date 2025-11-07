@@ -1,4 +1,5 @@
 
+
 {
   "header": {
     "title": "مولد سياسات الموارد البشرية والتنمية الاجتماعية الآلي",
@@ -24,16 +25,19 @@
     "articles": "المواد والبنود",
     "status": "الحالة",
     "lifecycleActions": "إجراءات دورة الحياة",
-    "export": "تصدير",
+    "trackingAndExport": "التتبع والتصدير",
     "exportPdf": "تصدير PDF",
     "exportWord": "تصدير Word",
-    "exportComingSoon": "وظيفة التصدير ستتوفر قريباً.",
-    "trackingCodes": "رموز التتبع",
+    "exporting": "جاري التصدير...",
+    "print": "طباعة",
+    "printing": "جاري الطباعة...",
     "auditTrail": "سجل التدقيق",
     "notesPromptTitle": "أدخل ملاحظات لتغيير الحالة إلى \"{{status}}\":",
     "notesPromptDefault": "تم تغيير الحالة بواسطة المستخدم."
   },
   "actions": {
+    "title": "إجراءات",
+    "view": "عرض",
     "requestApproval": "طلب الموافقة",
     "approve": "موافقة",
     "requestRevisions": "طلب تعديلات",

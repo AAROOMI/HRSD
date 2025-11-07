@@ -250,3 +250,41 @@ export const analyzeRisks = async (risks: RiskAssessmentItem[]): Promise<{ updat
         throw new Error("Failed to communicate with the AI model for risk analysis.");
     }
 };
+
+export const refineTextForRiskAssessment = async (rawText: string, fieldType: 'mitigation' | 'action'): Promise<string> => {
+    if (!API_KEY) {
+        throw new Error("AI Service is not configured.");
+    }
+    if (!rawText.trim()) {
+        return rawText; // Don't call API for empty text
+    }
+
+    const fieldDescription = fieldType === 'mitigation'
+        ? "a 'Mitigation Control'. This should be a specific, preventative, and practical measure. Suggest system-based controls where possible."
+        : "an 'Action Item'. This should be a concrete, measurable, and time-bound task. For example, 'Configure system notifications by Q3 2024.'";
+
+    const prompt = `
+    You are an expert HRSD risk analyst. A user provided a voice note that has been transcribed into the following text.
+    Your task is to refine this text to be professional, clear, and suitable for a formal risk assessment matrix.
+    The text is for ${fieldDescription}.
+
+    Original transcribed text: "${rawText}"
+
+    Return ONLY the refined text as a single string, without any additional explanations, labels, or markdown.
+    `;
+
+    try {
+        const response = await ai.models.generateContent({
+            model: "gemini-2.5-flash",
+            contents: prompt,
+        });
+
+        const refinedText = response.text.trim();
+        return refinedText;
+
+    } catch (error) {
+        console.error("Error refining text with Gemini:", error);
+        // In case of error, return the original text so user input is not lost
+        return rawText;
+    }
+};

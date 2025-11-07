@@ -8,7 +8,7 @@ interface TourAgentProps {
   setTourState: React.Dispatch<React.SetStateAction<TourState>>;
   setView: (view: View) => void;
   handleViewDocument: (docId: string) => void;
-  handleUpdateDocument: (docId: string, status: DocumentStatus, notes: string) => void;
+  handleUpdateDocument: (docId: string, status: DocumentStatus, notes: string, user?: string) => void;
   documents: DocumentObject[];
 }
 
@@ -51,7 +51,7 @@ const TourAgent: React.FC<TourAgentProps> = ({
         break;
       case 'requestApproval':
         if (performanceDoc) {
-          handleUpdateDocument(performanceDoc.id, 'Pending Approval', 'Status changed by AI Guide during tour.');
+          handleUpdateDocument(performanceDoc.id, 'Pending Approval', 'Status changed by AI Guide during tour.', 'AI Agent');
         }
         advanceStep();
         break;

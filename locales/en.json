@@ -1,4 +1,5 @@
 
+
 {
   "header": {
     "title": "HRSD Automated Policy Generator",
@@ -24,16 +25,19 @@
     "articles": "Articles & Clauses",
     "status": "Status",
     "lifecycleActions": "Lifecycle Actions",
-    "export": "Export",
+    "trackingAndExport": "Tracking & Export",
     "exportPdf": "Export PDF",
     "exportWord": "Export Word",
-    "exportComingSoon": "Export functionality coming soon.",
-    "trackingCodes": "Tracking Codes",
+    "exporting": "Exporting...",
+    "print": "Print",
+    "printing": "Printing...",
     "auditTrail": "Audit Trail",
     "notesPromptTitle": "Enter notes for changing status to \"{{status}}\":",
     "notesPromptDefault": "Status changed by user."
   },
   "actions": {
+    "title": "Actions",
+    "view": "View",
     "requestApproval": "Request Approval",
     "approve": "Approve",
     "requestRevisions": "Request Revisions",

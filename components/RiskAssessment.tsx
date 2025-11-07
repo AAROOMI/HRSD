@@ -1,8 +1,54 @@
+// Fix for SpeechRecognition API which is not in standard TS lib
+// These interfaces are based on the Web Speech API specification.
+interface SpeechRecognitionEvent extends Event {
+    readonly results: SpeechRecognitionResultList;
+}
+interface SpeechRecognitionResultList {
+    readonly length: number;
+    item(index: number): SpeechRecognitionResult;
+    [index: number]: SpeechRecognitionResult;
+}
+interface SpeechRecognitionResult {
+    readonly isFinal: boolean;
+    readonly length: number;
+    item(index: number): SpeechRecognitionAlternative;
+    [index: number]: SpeechRecognitionAlternative;
+}
+interface SpeechRecognitionAlternative {
+    readonly transcript: string;
+}
+interface SpeechRecognitionErrorEvent extends Event {
+  readonly error: string;
+}
+interface SpeechRecognition extends EventTarget {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onstart: (() => void) | null;
+  onend: (() => void) | null;
+  onerror: ((event: SpeechRecognitionErrorEvent) => void) | null;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  start(): void;
+  stop(): void;
+}
+interface SpeechRecognitionStatic {
+  new (): SpeechRecognition;
+}
+// FIX: Wrap the `Window` interface in `declare global` to augment the global window object.
+// This resolves TypeScript errors because this file is a module.
+declare global {
+    interface Window {
+      SpeechRecognition: SpeechRecognitionStatic;
+      webkitSpeechRecognition: SpeechRecognitionStatic;
+    }
+}
+
+
 import * as React from 'react';
-const { useState, useMemo } = React;
+const { useState, useMemo, useRef, useEffect } = React;
 import { useTranslation } from '../context/LanguageContext';
 import { RiskAssessmentItem, RiskLikelihood, RiskImpact, RiskLevel, RiskComplianceStatus, View, TourState } from '../types';
-import { analyzeRisks } from '../services/geminiService';
+import { analyzeRisks, refineTextForRiskAssessment } from '../services/geminiService';
 import QRCode from './QRCode';
 import Barcode from './Barcode';
 import LoadingSpinner from './LoadingSpinner';
@@ -68,8 +114,10 @@ const calculateRiskLevel = (likelihood: RiskLikelihood, impact: RiskImpact): { l
     return { level: 'Low', className: 'bg-teal-500 text-white' };
 };
 
+const isSpeechRecognitionSupported = !!(window.SpeechRecognition || window.webkitSpeechRecognition);
+
 const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) => {
-    const { t } = useTranslation();
+    const { t, language } = useTranslation();
     const [risks, setRisks] = useState<RiskAssessmentItem[]>(initialRiskData);
     const [categoryFilter, setCategoryFilter] = useState('All');
     const [riskLevelFilter, setRiskLevelFilter] = useState('All');
@@ -78,6 +126,10 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) =
     const [selectedRisk, setSelectedRisk] = useState<RiskAssessmentItem | null>(null);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
     const [analysisReport, setAnalysisReport] = useState<string | null>(null);
+    
+    const [listeningField, setListeningField] = useState<{ riskId: string; field: 'mitigationControls' | 'actionItems' } | null>(null);
+    const [refiningField, setRefiningField] = useState<{ riskId: string; field: 'mitigationControls' | 'actionItems' } | null>(null);
+    const recognitionRef = useRef<SpeechRecognition | null>(null);
 
     const initialNewRiskState: Omit<RiskAssessmentItem, 'id'> = {
         category: '',
@@ -90,6 +142,13 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) =
         actionItems: '',
     };
     const [newRisk, setNewRisk] = useState<Omit<RiskAssessmentItem, 'id'>>(initialNewRiskState);
+
+    useEffect(() => {
+        // Cleanup function to stop recognition if component unmounts
+        return () => {
+            recognitionRef.current?.stop();
+        };
+    }, []);
 
     const handleRiskChange = (id: string, field: keyof RiskAssessmentItem, value: string) => {
         setRisks(prevRisks => prevRisks.map(risk => risk.id === id ? { ...risk, [field]: value } : risk));
@@ -171,6 +230,81 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) =
             setIsAnalyzing(false);
         }
     };
+    
+    const handleVoiceInput = (riskId: string, field: 'mitigationControls' | 'actionItems') => {
+        if (!isSpeechRecognitionSupported) {
+            alert("Speech recognition is not supported in your browser.");
+            return;
+        }
+
+        if (listeningField && listeningField.riskId === riskId && listeningField.field === field) {
+            recognitionRef.current?.stop();
+            return;
+        }
+
+        if (recognitionRef.current) {
+            recognitionRef.current.stop();
+        }
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const recognition = new SpeechRecognition();
+        recognitionRef.current = recognition;
+
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = language === 'ar' ? 'ar-SA' : 'en-US';
+        
+        const startingText = risks.find(r => r.id === riskId)?.[field] || '';
+        let lastTranscript = '';
+
+        recognition.onstart = () => {
+            setListeningField({ riskId, field });
+        };
+
+        recognition.onend = async () => {
+            if (recognitionRef.current === recognition) {
+                setListeningField(null);
+                recognitionRef.current = null;
+                
+                const textToRefine = (startingText ? startingText + ' ' : '') + lastTranscript;
+
+                if (lastTranscript.trim()) {
+                    setRefiningField({ riskId, field });
+                    try {
+                        const fieldType = field === 'mitigationControls' ? 'mitigation' : 'action';
+                        const refinedText = await refineTextForRiskAssessment(textToRefine, fieldType);
+                        handleRiskChange(riskId, field, refinedText);
+                    } catch (error) {
+                        console.error("Failed to refine text:", error);
+                    } finally {
+                        setRefiningField(null);
+                    }
+                }
+            }
+        };
+
+        recognition.onerror = (event: SpeechRecognitionErrorEvent) => {
+            console.error("Speech recognition error", event.error);
+            if (recognitionRef.current === recognition) {
+                setListeningField(null);
+                recognitionRef.current = null;
+            }
+        };
+
+        recognition.onresult = (event: SpeechRecognitionEvent) => {
+            const transcript = Array.from(event.results)
+                .map(result => result[0])
+                .map(result => result.transcript)
+                .join('');
+            
+            lastTranscript = transcript;
+            const newText = (startingText ? startingText + ' ' : '') + transcript;
+            handleRiskChange(riskId, field, newText);
+        };
+
+        recognition.start();
+    };
+
 
     return (
         <div className="flex-grow w-full bg-black/30 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-col p-6 overflow-hidden">
@@ -233,6 +367,10 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) =
                     <tbody className="divide-y divide-white/10 text-gray-200">
                         {filteredRisks.map(risk => {
                             const { level, className } = calculateRiskLevel(risk.likelihood, risk.impact);
+                            const isListeningControls = listeningField?.riskId === risk.id && listeningField?.field === 'mitigationControls';
+                            const isListeningActions = listeningField?.riskId === risk.id && listeningField?.field === 'actionItems';
+                            const isRefiningControls = refiningField?.riskId === risk.id && refiningField?.field === 'mitigationControls';
+                            const isRefiningActions = refiningField?.riskId === risk.id && refiningField?.field === 'actionItems';
                             return (
                                 <tr key={risk.id} className="hover:bg-white/5 transition-colors">
                                     <td className="p-3 align-top">{risk.category}</td>
@@ -258,16 +396,18 @@ const RiskAssessment: React.FC<RiskAssessmentProps> = ({ setView, tourState }) =
                                             {t(`riskAssessment.levels.${level.toLowerCase()}`)}
                                         </span>
                                     </td>
-                                    <td className="p-3 align-top">
-                                        <textarea value={risk.mitigationControls} onChange={e => handleRiskChange(risk.id, 'mitigationControls', e.target.value)} className="w-full bg-gray-800/50 border border-gray-600/50 rounded-md p-1 text-white focus:ring-sky-500 focus:border-sky-500 resize-none h-24" />
+                                    <td className="p-3 align-top relative">
+                                        <textarea value={risk.mitigationControls} onChange={e => handleRiskChange(risk.id, 'mitigationControls', e.target.value)} className="w-full bg-gray-800/50 border border-gray-600/50 rounded-md p-1 pr-8 text-white focus:ring-sky-500 focus:border-sky-500 resize-none h-24" />
+                                        {isSpeechRecognitionSupported && <button onClick={() => handleVoiceInput(risk.id, 'mitigationControls')} disabled={isRefiningControls} title="Dictate with voice" className={`absolute bottom-2 right-2 p-1 rounded-full transition-colors ${ isListeningControls ? 'bg-red-500 text-white animate-pulse' : isRefiningControls ? 'bg-purple-500 text-white animate-pulse' : 'bg-gray-600 text-gray-200 hover:bg-gray-500'}`}><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">{isRefiningControls ? <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 011-1h.5a1.5 1.5 0 000-3H6a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" /> : <><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z"></path><path d="M5.5 9.5a.5.5 0 01.5.5v1a4 4 0 004 4h1a4 4 0 004-4v-1a.5.5 0 011 0v1a5 5 0 01-4.5 4.975V18h3a.5.5 0 010 1h-7a.5.5 0 010-1h3v-1.525A5 5 0 014 11.5v-1a.5.5 0 01.5-.5z"></path></>}</svg></button>}
                                     </td>
                                     <td className="p-3 align-top">
                                         <select value={risk.complianceStatus} onChange={e => handleRiskChange(risk.id, 'complianceStatus', e.target.value)} className={`w-full p-1 rounded-md border border-transparent focus:ring-sky-500 focus:border-sky-500 ${getComplianceStatusClass(risk.complianceStatus)}`}>
                                             {complianceStatuses.map(s => <option className="bg-gray-900 text-white" key={s} value={s}>{s}</option>)}
                                         </select>
                                     </td>
-                                    <td className="p-3 align-top">
-                                        <textarea value={risk.actionItems} onChange={e => handleRiskChange(risk.id, 'actionItems', e.target.value)} className="w-full bg-gray-800/50 border border-gray-600/50 rounded-md p-1 text-white focus:ring-sky-500 focus:border-sky-500 resize-none h-24" />
+                                    <td className="p-3 align-top relative">
+                                        <textarea value={risk.actionItems} onChange={e => handleRiskChange(risk.id, 'actionItems', e.target.value)} className="w-full bg-gray-800/50 border border-gray-600/50 rounded-md p-1 pr-8 text-white focus:ring-sky-500 focus:border-sky-500 resize-none h-24" />
+                                        {isSpeechRecognitionSupported && <button onClick={() => handleVoiceInput(risk.id, 'actionItems')} disabled={isRefiningActions} title="Dictate with voice" className={`absolute bottom-2 right-2 p-1 rounded-full transition-colors ${ isListeningActions ? 'bg-red-500 text-white animate-pulse' : isRefiningActions ? 'bg-purple-500 text-white animate-pulse' : 'bg-gray-600 text-gray-200 hover:bg-gray-500'}`}><svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">{isRefiningActions ? <path d="M10 3.5a1.5 1.5 0 013 0V4a1 1 0 001 1h3a1 1 0 011 1v3a1 1 0 01-1 1h-.5a1.5 1.5 0 000 3h.5a1 1 0 011 1v3a1 1 0 01-1 1h-3a1 1 0 01-1-1v-.5a1.5 1.5 0 00-3 0v.5a1 1 0 01-1 1H6a1 1 0 01-1-1v-3a1 1 0 011-1h.5a1.5 1.5 0 000-3H6a1 1 0 01-1-1V6a1 1 0 011-1h3a1 1 0 001-1v-.5z" /> : <><path d="M7 4a3 3 0 016 0v6a3 3 0 11-6 0V4z"></path><path d="M5.5 9.5a.5.5 0 01.5.5v1a4 4 0 004 4h1a4 4 0 004-4v-1a.5.5 0 011 0v1a5 5 0 01-4.5 4.975V18h3a.5.5 0 010 1h-7a.5.5 0 010-1h3v-1.525A5 5 0 014 11.5v-1a.5.5 0 01.5-.5z"></path></>}</svg></button>}
                                     </td>
                                 </tr>
                             );
