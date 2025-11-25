@@ -1,5 +1,3 @@
-
-
 {
   "header": {
     "title": "HRSD Automated Policy Generator",
@@ -128,6 +126,10 @@
   "riskAssessment": {
     "title": "HRSD Risk Assessment Matrix",
     "addNewRisk": "Add New Risk",
+    "add": {
+      "manual": "Add Manually",
+      "aiGuided": "Start AI-Guided Assessment"
+    },
     "filters": {
       "category": "Filter by Category",
       "riskLevel": "Filter by Risk Level",
@@ -143,7 +145,8 @@
       "impact": "Impact",
       "riskLevel": "Risk Level",
       "controls": "Mitigation Controls",
-      "status": "Status",
+      "complianceStatus": "Compliance Status",
+      "approvalStatus": "Approval Status",
       "actions": "Action Items"
     },
     "levels": {
@@ -157,12 +160,27 @@
       "partially": "Partially Compliant",
       "nonCompliant": "Non-Compliant"
     },
+    "approval": {
+        "draft": "Draft",
+        "pendingapproval": "Pending Approval",
+        "approved": "Approved",
+        "rejected": "Rejected"
+    },
+    "workflow": {
+      "title": "Management Approval Workflow"
+    },
     "modal": {
       "title": "Risk Item Details",
       "riskId": "Risk ID",
       "description": "Description",
       "trackingCodes": "Tracking Codes",
-      "close": "Close"
+      "close": "Close",
+      "rejectionReason": "Please provide a reason for rejecting this item:",
+      "submitForApproval": "Submit for Approval",
+      "approve": "Approve",
+      "reject": "Reject",
+      "managementReview": "Management Review",
+      "comments": "Management Comments"
     },
     "analysis": {
       "run": "Run AI Risk Analysis",
@@ -171,7 +189,46 @@
       "description": "Please wait while the agent reviews your risk matrix to suggest improvements.",
       "reportTitle": "AI Analysis Complete",
       "summaryTitle": "Summary of Changes",
+      "confirm": "Apply Changes",
+      "cancel": "Discard",
       "error": "The AI analysis failed. Please check the console for details and try again."
+    },
+    "aiGuided": {
+      "title": "AI-Guided Risk Assessment",
+      "welcome": "Welcome. I'll guide you through creating a new risk item. Let's start.",
+      "listening": "I'm listening...",
+      "processing": "Processing your answer...",
+      "summary": "Generated Risk Summary",
+      "review": "Please review the information below. You can edit any field before saving.",
+      "save": "Save as Draft",
+      "cancel": "Cancel",
+      "speakNow": "Please speak now...",
+      "micButton": "Record Answer"
+    }
+  },
+  "templateLibrary": {
+    "title": "HR Template Library",
+    "description": "Access AI-powered, ready-to-use HR document templates.",
+    "generating": "Agent AI is generating the template...",
+    "error": "Failed to generate template content. Please try again.",
+    "viewTemplate": "View Template",
+    "close": "Close",
+    "english": "English",
+    "arabic": "Arabic",
+    "hrManager": "HR Manager",
+    "templates": {
+      "offerLetter": {
+        "title": "Offer Letter"
+      },
+      "warningLetter": {
+        "title": "Warning Letter"
+      },
+      "experienceCertificate": {
+        "title": "Experience Certificate"
+      },
+      "promotionLetter": {
+        "title": "Promotion Letter"
+      }
     }
   },
   "tour": {
@@ -193,9 +250,14 @@
       "4": "Great, here is the full policy document.",
       "5": "On the right, you can see the lifecycle actions. Since this document is a 'Draft', you can submit it for approval. Would you like me to do that for you now?",
       "6": "Excellent. I've submitted it. Notice the audit trail has been updated. Let's go to the Risk Assessment Matrix next.",
-      "7": "This is the Risk Assessment Matrix. It's pre-populated with potential risks based on the HRSD framework. You can filter, edit, and add new risks here.",
+      "7": "This is the Risk Assessment Matrix. It's pre-populated with potential risks and now includes a management approval workflow. You can add new risks manually or use our new AI-Guided assessment.",
       "8": "The final key area is the Live Assistant, where you can speak in real-time with an AI consultant about compliance. We won't start a session now, but you can explore it later.",
       "9": "That concludes our guided tour! You can restart this tour anytime from the header. Enjoy using the application!"
     }
+  },
+   "readAloud": {
+    "play": "Read this section aloud",
+    "loading": "Loading audio...",
+    "stop": "Stop reading"
   }
 }

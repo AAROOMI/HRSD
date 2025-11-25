@@ -45,7 +45,7 @@ export interface CompliancePlan {
   steps: ComplianceStep[];
 }
 
-export type View = 'complianceDashboard' | 'documentList' | 'viewer' | 'compliance' | 'liveAssistant' | 'riskAssessment';
+export type View = 'complianceDashboard' | 'documentList' | 'viewer' | 'compliance' | 'liveAssistant' | 'riskAssessment' | 'templateLibrary';
 
 export interface TourState {
   isActive: boolean;
@@ -57,6 +57,7 @@ export type RiskLikelihood = 'Low' | 'Medium' | 'High';
 export type RiskImpact = 'Low' | 'Medium' | 'High';
 export type RiskComplianceStatus = 'Compliant' | 'Partially Compliant' | 'Non-Compliant';
 export type RiskLevel = 'Low' | 'Moderate' | 'High' | 'Severe';
+export type ApprovalStatus = 'Draft' | 'Pending Approval' | 'Approved' | 'Rejected';
 
 export interface RiskAssessmentItem {
   id: string;
@@ -68,4 +69,14 @@ export interface RiskAssessmentItem {
   mitigationControls: string;
   complianceStatus: RiskComplianceStatus;
   actionItems: string;
+  approvalStatus: ApprovalStatus;
+  managementComments?: string;
+}
+
+// --- Template Library Types ---
+export interface Template {
+  id: string;
+  title: { en: string; ar: string };
+  // Content is generated on demand by the AI
+  content?: { en: string; ar: string };
 }

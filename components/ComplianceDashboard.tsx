@@ -140,7 +140,11 @@ const ComplianceDashboard: React.FC<ComplianceDashboardProps> = ({ documents, po
                     </thead>
                     <tbody className="divide-y divide-white/10">
                         {complianceData.map(({ policy, doc, status }) => (
-                            <tr key={policy.id} className={`transition-colors ${doc ? 'hover:bg-white/10' : 'opacity-60'} ${tourState.isActive && tourState.step === 3 && doc?.id === performanceDocId ? 'bg-sky-500/20' : ''}`}>
+                            <tr
+                                key={policy.id}
+                                onClick={() => doc && onView(doc.id)}
+                                className={`transition-colors ${doc ? 'hover:bg-white/10 cursor-pointer' : 'opacity-60'} ${tourState.isActive && tourState.step === 3 && doc?.id === performanceDocId ? 'bg-sky-500/20' : ''}`}
+                            >
                                 <td className="p-3 font-medium text-white">{policy.title}</td>
                                 <td className="p-3">
                                     <span className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusChipClass(status)}`}>

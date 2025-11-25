@@ -1,5 +1,3 @@
-
-
 // Add declarations for CDN libraries to satisfy TypeScript
 declare global {
   interface Window {
@@ -10,12 +8,84 @@ declare global {
 }
 
 import * as React from 'react';
-const { useState, useEffect } = React;
+const { useState, useEffect, useRef } = React;
 import { DocumentObject, DocumentStatus, TourState } from '../types';
 import { useTranslation } from '../context/LanguageContext';
 import QRCode from './QRCode';
 import Barcode from './Barcode';
 import { ExportAction } from '../App';
+import { generateSpeech } from '../services/geminiService';
+
+
+// --- Audio Helper Functions ---
+function decode(base64: string) {
+    const binaryString = atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes;
+}
+
+async function decodeAudioData(
+    data: Uint8Array,
+    ctx: AudioContext,
+    sampleRate: number,
+    numChannels: number,
+): Promise<AudioBuffer> {
+    const dataInt16 = new Int16Array(data.buffer);
+    const frameCount = dataInt16.length / numChannels;
+    const buffer = ctx.createBuffer(numChannels, frameCount, sampleRate);
+
+    for (let channel = 0; channel < numChannels; channel++) {
+        const channelData = buffer.getChannelData(channel);
+        for (let i = 0; i < frameCount; i++) {
+            channelData[i] = dataInt16[i * numChannels + channel] / 32768.0;
+        }
+    }
+    return buffer;
+}
+
+
+interface ReadAloudButtonProps {
+    sectionId: string;
+    text: string;
+    onClick: (id: string, text: string) => void;
+    playbackState: { id: string; status: 'loading' | 'playing' | 'idle' };
+}
+
+const ReadAloudButton: React.FC<ReadAloudButtonProps> = ({ sectionId, text, onClick, playbackState }) => {
+    const { t } = useTranslation();
+    const status = playbackState.id === sectionId ? playbackState.status : 'idle';
+
+    let icon, label;
+    switch (status) {
+        case 'loading':
+            icon = <div className="w-4 h-4 border-2 border-t-sky-400 border-r-sky-400 border-b-white/20 border-l-white/20 rounded-full animate-spin"></div>;
+            label = t('readAloud.loading');
+            break;
+        case 'playing':
+            icon = <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M5 5a1 1 0 011-1h8a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1V5z" clipRule="evenodd" /></svg>;
+            label = t('readAloud.stop');
+            break;
+        default: // idle
+            icon = <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fillRule="evenodd" d="M9.383 3.076A1 1 0 0110 4v12a1 1 0 01-1.707.707L4.586 13H2a1 1 0 01-1-1V8a1 1 0 011-1h2.586l3.707-3.707a1 1 0 011.09-.217zM14.657 2.929a1 1 0 011.414 0A9.972 9.972 0 0119 10a9.972 9.972 0 01-2.929 7.071 1 1 0 01-1.414-1.414A7.971 7.971 0 0017 10c0-2.21-.894-4.208-2.343-5.657a1 1 0 010-1.414zm-2.829 2.828a1 1 0 011.415 0A5.983 5.983 0 0115 10a5.984 5.984 0 01-1.757 4.243 1 1 0 01-1.415-1.415A3.984 3.984 0 0013 10a3.983 3.983 0 00-1.172-2.828 1 1 0 010-1.415z" clipRule="evenodd" /></svg>;
+            label = t('readAloud.play');
+    }
+
+    return (
+        <button 
+            onClick={() => onClick(sectionId, text)} 
+            title={label}
+            className="p-1 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition-colors"
+            aria-label={label}
+        >
+            {icon}
+        </button>
+    );
+};
+
 
 interface DocumentViewerProps {
   document: DocumentObject;
@@ -59,6 +129,69 @@ const StatusIcon: React.FC<{ status: DocumentStatus }> = ({ status }) => {
 const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onBack, tourState, actionRequest, onActionComplete }) => {
     const { t } = useTranslation();
     const [isExporting, setIsExporting] = useState<'pdf' | 'word' | 'print' | null>(null);
+    const [playbackState, setPlaybackState] = useState<{ id: string, status: 'loading' | 'playing' | 'idle' }>({ id: '', status: 'idle' });
+    const audioRef = useRef<{ context: AudioContext | null, source: AudioBufferSourceNode | null }>({ context: null, source: null });
+
+    // Cleanup audio on unmount
+    useEffect(() => {
+        return () => {
+            if (audioRef.current.source) {
+                audioRef.current.source.stop();
+            }
+            if (audioRef.current.context) {
+                audioRef.current.context.close().catch(console.error);
+            }
+        };
+    }, []);
+
+    const stopPlayback = () => {
+        if (audioRef.current.source) {
+            audioRef.current.source.onended = null; // Prevent onended from firing on manual stop
+            audioRef.current.source.stop();
+            audioRef.current.source.disconnect();
+            audioRef.current.source = null;
+        }
+        if (audioRef.current.context) {
+            audioRef.current.context.close().catch(console.error);
+            audioRef.current.context = null;
+        }
+        setPlaybackState({ id: '', status: 'idle' });
+    };
+
+    const handleTogglePlayback = async (id: string, text: string) => {
+        const isCurrentlyPlaying = playbackState.id === id && playbackState.status === 'playing';
+
+        stopPlayback(); // Stop any current playback
+
+        if (isCurrentlyPlaying) {
+            return; // If it was playing, we just stop it.
+        }
+        
+        setPlaybackState({ id, status: 'loading' });
+        try {
+            const base64Audio = await generateSpeech(text);
+            
+            const AudioCtor = window.AudioContext || (window as any).webkitAudioContext;
+            const context = new AudioCtor({ sampleRate: 24000 });
+            audioRef.current.context = context;
+
+            const audioBuffer = await decodeAudioData(decode(base64Audio), context, 24000, 1);
+            const source = context.createBufferSource();
+            source.buffer = audioBuffer;
+            source.connect(context.destination);
+            
+            source.onended = stopPlayback;
+
+            source.start();
+            audioRef.current.source = source;
+            setPlaybackState({ id, status: 'playing' });
+
+        } catch (error) {
+            console.error("Failed to play audio", error);
+            alert('Failed to generate or play audio.');
+            setPlaybackState({ id: '', status: 'idle' });
+        }
+    };
     
     const handleAction = (status: DocumentStatus) => {
         const notes = prompt(t('documentViewer.notesPromptTitle', { status }), t('documentViewer.notesPromptDefault'));
@@ -109,13 +242,13 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onB
     };
 
     const downloadBlob = (blob: Blob, fileName: string) => {
-        const link = document.createElement('a');
+        const link = window.document.createElement('a');
         const url = URL.createObjectURL(blob);
         link.href = url;
         link.download = fileName;
-        document.body.appendChild(link);
+        window.document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
+        window.document.body.removeChild(link);
         URL.revokeObjectURL(url);
     };
 
@@ -132,73 +265,99 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onB
     };
 
     const handleExportPDF = async (fromAction: boolean = false) => {
+        if (!window.jspdf || !window.html2canvas) {
+            alert('PDF export library is not available. Please try again later.');
+            if (fromAction) onActionComplete();
+            return;
+        }
+    
         const { jsPDF } = window.jspdf;
-        const input = document.getElementById('document-content');
+        const input = window.document.getElementById('document-content');
         if (!input) {
             console.error("Document content element not found for PDF export.");
             if (fromAction) onActionComplete();
             return;
         }
-
+    
         setIsExporting('pdf');
-        
-        // Temporarily modify styles for full content capture
-        const originalOverflow = input.style.overflow;
-        const originalHeight = input.style.height;
-        input.style.overflow = 'visible';
-        input.style.height = `${input.scrollHeight}px`;
-
+    
+        const parentContainers: HTMLElement[] = [];
+        let current: HTMLElement | null = input.parentElement;
+        while (current) {
+            parentContainers.push(current);
+            if (current.tagName === 'MAIN') break;
+            current = current.parentElement;
+        }
+    
+        const originalStyles = parentContainers.map(el => ({
+            element: el,
+            overflow: el.style.overflow,
+            height: el.style.height,
+        }));
+    
+        const inputOriginalHeight = input.style.height;
+    
+        // FIX: The `parentContainers` array contains HTMLElements directly.
+        // The original code incorrectly tried to access `s.element`, which does not exist on an HTMLElement.
+        // The `style` property should be accessed directly on the element `s`.
+        parentContainers.forEach(s => {
+            s.style.overflow = 'visible';
+            s.style.height = 'auto';
+        });
+        input.style.height = 'auto';
+    
         try {
             const canvas = await window.html2canvas(input, {
                 scale: 2,
                 useCORS: true,
-                backgroundColor: '#030712', // bg-gray-900
-                windowWidth: input.scrollWidth,
-                windowHeight: input.scrollHeight,
+                backgroundColor: '#030712',
             });
-
-            // Restore original styles
-            input.style.overflow = originalOverflow;
-            input.style.height = originalHeight;
-
+    
             const imgData = canvas.toDataURL('image/png');
-            
             const pdf = new jsPDF('p', 'mm', 'a4');
             const pdfWidth = pdf.internal.pageSize.getWidth();
             const pdfHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = canvas.width;
-            const imgHeight = canvas.height;
-            const ratio = imgWidth / pdfWidth;
-            const scaledHeight = imgHeight / ratio;
-            
+            const imgProps = pdf.getImageProperties(imgData);
+            const ratio = imgProps.width / pdfWidth;
+            const imgHeight = imgProps.height / ratio;
+    
+            let heightLeft = imgHeight;
             let position = 0;
-            let heightLeft = scaledHeight;
-
-            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
+    
+            pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
             heightLeft -= pdfHeight;
-
+    
             while (heightLeft > 0) {
                 position -= pdfHeight;
                 pdf.addPage();
-                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, scaledHeight);
+                pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
                 heightLeft -= pdfHeight;
             }
-            
+    
             pdf.save(`${document.id}_${document.policyTitle.replace(/\s/g, '_')}.pdf`);
-
+    
         } catch (error) {
             console.error("Error generating PDF:", error);
             alert("Sorry, there was an error generating the PDF.");
         } finally {
-             // Ensure styles are restored even if an error occurs
-            input.style.overflow = originalOverflow;
-            input.style.height = originalHeight;
+            originalStyles.forEach(s => {
+                s.element.style.overflow = s.overflow;
+                s.element.style.height = s.height;
+            });
+            input.style.height = inputOriginalHeight;
+    
             setIsExporting(null);
             if (fromAction) onActionComplete();
         }
     };
 
     const handleExportWord = async (fromAction: boolean = false) => {
+        if (typeof window.docx === 'undefined') {
+            alert('Word export library is not available. It might be loading or blocked. Please try again later.');
+            if (fromAction) onActionComplete();
+            return;
+        }
+
         setIsExporting('word');
         try {
             const { Document, Packer, Paragraph, TextRun, HeadingLevel } = window.docx;
@@ -271,28 +430,40 @@ const DocumentViewer: React.FC<DocumentViewerProps> = ({ document, onUpdate, onB
   return (
     <div className="flex-grow w-full bg-black/30 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl flex flex-row-reverse lg:flex-row overflow-hidden print:block print:shadow-none print:border-none print:bg-white print:text-black">
         {/* Main Content */}
-        <div id="document-content" className="flex-grow p-8 overflow-y-auto bg-gray-900 print:!overflow-visible print:p-0 print:bg-white">
+        <div id="document-content" className="flex-grow p-8 overflow-y-auto bg-gray-900 print:overflow-visible print:bg-white">
             <h1 className="text-4xl font-bold mb-2 text-sky-300 print:text-black">{document.policyTitle}</h1>
             <p className="text-sm text-gray-400 mb-6 print:text-gray-600">{t('dashboard.idLabel')}: {document.id} | {t('dashboard.versionLabel')}: {document.version.toFixed(1)}</p>
 
             <section className="mb-6">
-                <h2 className="section-title print:text-black">{t('documentViewer.description')}</h2>
+                <h2 className="section-title print:text-black flex items-center gap-2">
+                    {t('documentViewer.description')}
+                    <ReadAloudButton sectionId="desc" text={document.content.description} onClick={handleTogglePlayback} playbackState={playbackState} />
+                </h2>
                 <p className="section-content print:text-gray-800">{document.content.description}</p>
             </section>
             <section className="mb-6">
-                <h2 className="section-title print:text-black">{t('documentViewer.purpose')}</h2>
+                <h2 className="section-title print:text-black flex items-center gap-2">
+                    {t('documentViewer.purpose')}
+                    <ReadAloudButton sectionId="purpose" text={document.content.purpose} onClick={handleTogglePlayback} playbackState={playbackState} />
+                </h2>
                 <p className="section-content print:text-gray-800">{document.content.purpose}</p>
             </section>
             <section className="mb-6">
-                <h2 className="section-title print:text-black">{t('documentViewer.scope')}</h2>
+                 <h2 className="section-title print:text-black flex items-center gap-2">
+                    {t('documentViewer.scope')}
+                    <ReadAloudButton sectionId="scope" text={document.content.scope} onClick={handleTogglePlayback} playbackState={playbackState} />
+                </h2>
                 <p className="section-content print:text-gray-800">{document.content.scope}</p>
             </section>
             
             <section className="mb-6 space-y-6">
-                <h2 className="section-title print:text-black">{t('documentViewer.articles')}</h2>
+                 <h2 className="section-title print:text-black">{t('documentViewer.articles')}</h2>
                 {document.content.articles.map((article, index) => (
                     <div key={index} className="pl-4 border-l-2 border-sky-500/30 print:border-l-2 print:border-gray-300">
-                        <h3 className="font-semibold text-lg text-teal-300 mb-2 print:text-black">{article.title}</h3>
+                        <h3 className="font-semibold text-lg text-teal-300 mb-2 flex items-center gap-2 print:text-black">
+                            {article.title}
+                            <ReadAloudButton sectionId={`article-${index}`} text={`${article.title}. ${article.content}`} onClick={handleTogglePlayback} playbackState={playbackState} />
+                        </h3>
                         <div className="section-content whitespace-pre-wrap print:text-gray-800">
                             <p>{article.content}</p>
                         </div>

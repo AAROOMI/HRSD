@@ -37,7 +37,8 @@ const ActionsDropdown: React.FC<{ doc: DocumentObject; onView: (docId: string) =
         return () => document.removeEventListener("mousedown", handleClickOutside);
     }, [wrapperRef]);
 
-    const handleAction = (action: ExportAction | 'view') => {
+    const handleAction = (e: React.MouseEvent, action: ExportAction | 'view') => {
+        e.stopPropagation();
         if (action === 'view') {
             onView(doc.id);
         } else {
@@ -48,17 +49,17 @@ const ActionsDropdown: React.FC<{ doc: DocumentObject; onView: (docId: string) =
 
     return (
         <div className="relative" ref={wrapperRef}>
-            <button onClick={() => setIsOpen(!isOpen)} className="p-1 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
+            <button onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }} className="p-1 rounded-full text-gray-400 hover:bg-white/10 hover:text-white transition-colors">
                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M10 6a2 2 0 110-4 2 2 0 010 4zM10 12a2 2 0 110-4 2 2 0 010 4zM10 18a2 2 0 110-4 2 2 0 010 4z" />
                 </svg>
             </button>
             {isOpen && (
                 <div className="absolute top-full right-0 mt-2 w-48 bg-gray-800 border border-white/20 rounded-md shadow-lg z-20 py-1">
-                    <button onClick={() => handleAction('view')} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-sky-600">{t('actions.view')}</button>
-                    <button onClick={() => handleAction('print')} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-sky-600">{t('documentViewer.print')}</button>
-                    <button onClick={() => handleAction('pdf')} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-sky-600">{t('documentViewer.exportPdf')}</button>
-                    <button onClick={() => handleAction('word')} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-sky-600">{t('documentViewer.exportWord')}</button>
+                    <button onClick={(e) => handleAction(e, 'view')} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-sky-600">{t('actions.view')}</button>
+                    <button onClick={(e) => handleAction(e, 'print')} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-sky-600">{t('documentViewer.print')}</button>
+                    <button onClick={(e) => handleAction(e, 'pdf')} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-sky-600">{t('documentViewer.exportPdf')}</button>
+                    <button onClick={(e) => handleAction(e, 'word')} className="w-full text-left px-4 py-2 text-sm text-gray-200 hover:bg-sky-600">{t('documentViewer.exportWord')}</button>
                 </div>
             )}
         </div>
@@ -78,7 +79,8 @@ const DocumentList: React.FC<DocumentListProps> = ({ documents, onView, onAction
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     {documents.map(doc => (
                         <div key={doc.id}
-                             className="bg-white/5 p-4 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 flex flex-col justify-between">
+                             onClick={() => onView(doc.id)}
+                             className="bg-white/5 p-4 rounded-lg border border-white/10 hover:border-white/20 transition-all duration-300 flex flex-col justify-between cursor-pointer">
                             <div className="flex justify-between items-start">
                                 <div className="flex-grow">
                                     <h3 className="text-lg font-semibold text-sky-300 truncate pr-2">{doc.policyTitle}</h3>

@@ -1,6 +1,8 @@
+
 import * as React from 'react';
 const { useState, useRef, useEffect, useCallback } = React;
-import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob, TourState } from '@google/genai';
+import { GoogleGenAI, LiveSession, LiveServerMessage, Modality, Blob } from '@google/genai';
+import { TourState } from '../types';
 import { useTranslation } from '../context/LanguageContext';
 
 // --- Helper Functions ---
@@ -289,7 +291,7 @@ const LiveAssistant: React.FC<LiveAssistantProps> = ({ tourState }) => {
                     responseModalities: [Modality.AUDIO],
                     inputAudioTranscription: {},
                     outputAudioTranscription: {},
-                    systemInstruction: `You are a professional HRSD (Human Resources and Social Development) consultant. Your role is to guide users on processes according to the HRSD framework, govern company HRSD processes, and perform quarterly audits. You are also an AI assessment expert, compliance auditor, and approval tracker. In your responses, provide clear verbal feedback, assess against compliance recommendations, document the status, and if approval is required, identify the approver and suggest follow-up actions to ensure compliance.`,
+                    systemInstruction: `You are a professional HRSD (Human Resources and Social Development) consultant. Your role is to guide users on processes according to the HRSD framework, govern company HRSD processes, and perform quarterly audits. You are also an AI assessment expert, compliance auditor, and approval tracker. Communicate in the language used by the user (Arabic or English). If the user speaks Arabic, reply in Arabic. In your responses, provide clear verbal feedback, assess against compliance recommendations, document the status, and if approval is required, identify the approver and suggest follow-up actions to ensure compliance.`,
                 },
             });
             await sessionPromiseRef.current;
